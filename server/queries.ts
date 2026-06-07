@@ -60,7 +60,7 @@ function mapProduct(p: ProductRecord): ProductWithImages {
     nameEn: p.nameEn,
     description: p.description,
     descriptionEn: p.descriptionEn,
-    price: p.price ? decimalToNumber(p.price) : null,
+    price: p.price ? decimalToNumber(p.price) : 0,
     active: p.active,
     featured: p.featured,
     categoryId: p.categoryId,
