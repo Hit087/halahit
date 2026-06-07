@@ -8,8 +8,8 @@ export default async function AdminDashboardPage() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl font-bold text-text">لوحة التحكم</h1>
-      <p className="mt-1 text-text/60">مرحباً بك في إدارة Hit | هيت</p>
+      <h1 className="font-display text-3xl font-bold">لوحة التحكم</h1>
+      <p className="mt-1 text-text/60">مرحباً بك في إدارة Hit</p>
 
       <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <Card>
@@ -40,10 +40,9 @@ export default async function AdminDashboardPage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {analytics.popularProducts.map((product) => {
               if (!product) return null;
-              const views =
-                analytics.productViewCounts.find(
-                  (v) => v.productId === product.id
-                )?._count.productId ?? 0;
+              const views = analytics.productViewCounts.find(
+                (v) => v.productId === product.id
+              )?._count.productId ?? 0;
               const image = product.images[0]?.url;
               return (
                 <Card key={product.id} className="flex gap-4 items-center">
@@ -56,7 +55,7 @@ export default async function AdminDashboardPage() {
                     <p className="font-medium">{product.name}</p>
                     <p className="text-sm text-text/60">{views} مشاهدة</p>
                     <p className="text-accent font-bold">
-                      {formatPrice(decimalToNumber(product.price))}
+                      {product.price ? formatPrice(decimalToNumber(product.price)) : "—"}
                     </p>
                   </div>
                 </Card>
