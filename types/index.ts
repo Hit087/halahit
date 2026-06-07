@@ -27,7 +27,7 @@ export type ProductWithImages = {
   nameEn: string;
   description: string;
   descriptionEn: string | null;
-  price: number;
+  price: number | null;
   active: boolean;
   featured: boolean;
   categoryId: string;
