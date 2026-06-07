@@ -21,7 +21,7 @@ export function ProductDetailClient({ product }: { product: ProductWithImages })
         productId: product.id,
         name: product.name,
         nameEn: product.nameEn,
-        price: product.price,
+        price: product.price ?? 0,
         image,
       },
       qty
@@ -34,29 +34,21 @@ export function ProductDetailClient({ product }: { product: ProductWithImages })
       <div>
         {product.category && (
           <p className="text-sm font-medium text-accent">
-            {localizedName(
-              product.category.name,
-              product.category.nameEn,
-              locale
-            )}
+            {localizedName(product.category.name, product.category.nameEn, locale)}
           </p>
         )}
         <h1 className="mt-2 font-display text-4xl font-bold text-text">
           {localizedName(product.name, product.nameEn, locale)}
         </h1>
 
-        {product.price != null && (
+        {product.price != null && product.price > 0 && (
           <p className="mt-4 text-3xl font-bold text-accent">
             {formatPrice(product.price, locale === "ar" ? "ar-SA" : "en-SA")}
           </p>
         )}
 
         <p className="mt-6 leading-relaxed text-text/80">
-          {localizedDescription(
-            product.description,
-            product.descriptionEn,
-            locale
-          )}
+          {localizedDescription(product.description, product.descriptionEn, locale)}
         </p>
 
         <div className="mt-8 flex items-center gap-4">
@@ -66,7 +58,7 @@ export function ProductDetailClient({ product }: { product: ProductWithImages })
               onClick={() => setQty((q) => Math.max(1, q - 1))}
               className="px-4 py-3 text-lg hover:bg-beige/50"
             >
-              −
+              -
             </button>
             <span className="min-w-[3rem] text-center font-medium">{qty}</span>
             <button
