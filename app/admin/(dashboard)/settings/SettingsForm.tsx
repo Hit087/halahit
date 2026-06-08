@@ -60,7 +60,7 @@ export function SettingsForm({ settings }: { settings: Settings | null }) {
         <Input name="tiktokLink" label="رابط تيك توك" defaultValue={settings?.tiktokLink ?? ""} />
         <Input
           name="instagramLink"
-          label="رابط إنستغرام"
+          label="رابط إنستقرام"
           defaultValue={settings?.instagramLink ?? ""}
         />
         <Input
@@ -68,7 +68,7 @@ export function SettingsForm({ settings }: { settings: Settings | null }) {
           label="رابط سناب شات"
           defaultValue={settings?.snapchatLink ?? ""}
         />
-        <Input name="kitaLink" label="رابط كيتا" defaultValue={settings?.kitaLink ?? ""} />
+        <Input name="kitalink" label="رابط كيتا" defaultValue={settings?.kitalink ?? ""} />
         <Input
           name="theChefzLink"
           label="رابط ذا شيفز"
@@ -76,10 +76,8 @@ export function SettingsForm({ settings }: { settings: Settings | null }) {
         />
 
         <div className="border-t border-beige pt-4 mt-6">
-          <h3 className="font-semibold mb-3">تغيير كلمة مرور الأدمن</h3>
-          <p className="text-sm text-text/60 mb-3">
-            اترك الحقول فارغة إذا لم ترد تغيير كلمة المرور
-          </p>
+          <h3 className="font-semibold mb-3">تغيير كلمة المرور</h3>
+          <p className="text-sm text-text/60 mb-3">اترك الحقول فارغة إذا لم تريد تغيير كلمة المرور</p>
           <div className="space-y-4">
             <Input
               name="newPassword"

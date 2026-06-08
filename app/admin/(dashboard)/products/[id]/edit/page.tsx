@@ -27,7 +27,7 @@ export default async function EditProductPage({
           nameEn: product.nameEn,
           description: product.description,
           descriptionEn: product.descriptionEn ?? "",
-          price: decimalToNumber(product.price),
+          price: product.price ? decimalToNumber(product.price) : 0,
           categoryId: product.categoryId,
           active: product.active,
           featured: product.featured,

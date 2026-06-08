@@ -9,7 +9,7 @@ export async function getSettings() {
     return {
       id: "default",
       storeName: "Hit | هيت",
-      tagline: "أكل قطعة ذكرى",
+      tagline: "أكل قلبية ذكرى",
       whatsappNumber: "",
       logo: null,
       mapLink: null,
@@ -45,7 +45,7 @@ type ProductRecord = {
   nameEn: string;
   description: string;
   descriptionEn: string | null;
-  price: { toNumber(): number } | number;
+  price: { toNumber(): number } | number | null;
   active: boolean;
   featured: boolean;
   categoryId: string;
@@ -60,7 +60,7 @@ function mapProduct(p: ProductRecord): ProductWithImages {
     nameEn: p.nameEn,
     description: p.description,
     descriptionEn: p.descriptionEn,
-    price: decimalToNumber(p.price),
+    price: p.price ? decimalToNumber(p.price) : 0,
     active: p.active,
     featured: p.featured,
     categoryId: p.categoryId,
@@ -106,7 +106,6 @@ export async function getCategoriesWithProducts() {
       },
     },
   });
-
   return categories
     .map((cat) => ({
       ...cat,
