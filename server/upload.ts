@@ -1,13 +1,17 @@
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
 import { randomUUID } from "crypto";
+import { createClient } from "@supabase/supabase-js";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-const MAX_SIZE = 20 * 1024 * 1024; // 20 ميجابايت
+const MAX_SIZE = 20 * 1024 * 1024;
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_KEY!
+);
 
 export async function saveUploadedFile(file: File): Promise<string> {
   if (!ALLOWED_TYPES.includes(file.type)) {
-    throw new Error("نوع الملف غير مدعوم. استخدم PNG أو JPG أو WebP");
+    throw new Error("نوع الملف غير مدعوم. استخدم JPG أو PNG أو WebP");
   }
 
   if (file.size > MAX_SIZE) {
@@ -20,14 +24,20 @@ export async function saveUploadedFile(file: File): Promise<string> {
     : "jpg";
   const filename = `${randomUUID()}.${safeExt}`;
 
-  const uploadsDir = path.join(process.cwd(), "public", "uploads");
-  await mkdir(uploadsDir, { recursive: true });
-
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
-  await writeFile(path.join(uploadsDir, filename), buffer);
 
-  return `/uploads/${filename}`;
+  const { error } = await supabase.storage
+    .from("products")
+    .upload(filename, buffer, { contentType: file.type });
+
+  if (error) throw new Error(error.message);
+
+  const { data } = supabase.storage
+    .from("products")
+    .getPublicUrl(filename);
+
+  return data.publicUrl;
 }
 
 export async function saveUploadedFiles(files: File[]): Promise<string[]> {
