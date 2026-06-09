@@ -10,13 +10,9 @@ import { useLocaleStore } from "@/store/locale-store";
 import { localizedName } from "@/lib/i18n";
 import { Button } from "@/components/ui/Button";
 
-const BLUR_PLACEHOLDER =
-  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
-
 export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
   const activeSlides = slides.filter((s) => s.active);
   const [index, setIndex] = useState(0);
-  const [loaded, setLoaded] = useState(false);
   const locale = useLocaleStore((s) => s.locale);
 
   const next = useCallback(() => {
@@ -28,11 +24,6 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
     const timer = setInterval(next, 5000);
     return () => clearInterval(timer);
   }, [activeSlides.length, next]);
-
-  // reset loaded on slide change
-  useEffect(() => {
-    setLoaded(false);
-  }, [index]);
 
   if (!activeSlides.length) return null;
 
@@ -51,7 +42,7 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
             transition={{ duration: 0.4 }}
             className="relative"
           >
-            {/* الصورة الممتلئة */}
+            {/* الصورة دايماً تظهر */}
             <div className="relative h-[320px] sm:h-[420px] md:h-[480px] w-full bg-[#f7e8e8]">
               <Image
                 src={slide.image}
@@ -59,53 +50,37 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
                 fill
                 priority
                 sizes="100vw"
-                placeholder="blur"
-                blurDataURL={BLUR_PLACEHOLDER}
-                className={`object-cover object-center transition-opacity duration-500 ${
-                  loaded ? "opacity-100" : "opacity-0"
-                }`}
-                onLoad={() => setLoaded(true)}
+                className="object-cover object-center"
               />
-              {/* تدرج داكن للنص - يظهر فقط بعد تحميل الصورة */}
-              {loaded && (
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
             </div>
 
-            {/* النص فوق الصورة */}
-            {loaded && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1, duration: 0.4 }}
-                className="absolute bottom-0 inset-x-0 p-6 sm:p-8 md:p-10"
-              >
-                <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold text-white leading-snug drop-shadow-md">
-                  {localizedName(slide.title, slide.titleEn, locale)}
-                </h1>
+            {/* النص دايماً يظهر فوق الصورة */}
+            <div className="absolute bottom-0 inset-x-0 p-6 sm:p-8 md:p-10">
+              <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold text-white leading-snug drop-shadow-md">
+                {localizedName(slide.title, slide.titleEn, locale)}
+              </h1>
 
-                {(slide.subtitle || slide.subtitleEn) && (
-                  <p className="mt-2 text-sm sm:text-base text-white/85 max-w-md drop-shadow">
-                    {localizedName(slide.subtitle ?? "", slide.subtitleEn ?? "", locale)}
-                  </p>
-                )}
+              {(slide.subtitle || slide.subtitleEn) && (
+                <p className="mt-2 text-sm sm:text-base text-white/85 max-w-md drop-shadow">
+                  {localizedName(slide.subtitle ?? "", slide.subtitleEn ?? "", locale)}
+                </p>
+              )}
 
-                {slide.ctaLink && (
-                  <Link href={slide.ctaLink} className="mt-5 inline-block">
-                    <Button
-                      size="lg"
-                      className="rounded-full bg-[#F4A6C1] px-8 text-white font-semibold shadow-lg hover:bg-[#e392b0] transition"
-                    >
-                      {slide.ctaText ?? "تسوق الآن"}
-                    </Button>
-                  </Link>
-                )}
-              </motion.div>
-            )}
+              {slide.ctaLink && (
+                <Link href={slide.ctaLink} className="mt-5 inline-block">
+                  <Button
+                    size="lg"
+                    className="rounded-full bg-[#F4A6C1] px-8 text-white font-semibold shadow-lg hover:bg-[#e392b0] transition"
+                  >
+                    {slide.ctaText ?? "تسوق الآن"}
+                  </Button>
+                </Link>
+              )}
+            </div>
           </motion.div>
         </AnimatePresence>
 
-        {/* نقاط التنقل */}
         {activeSlides.length > 1 && (
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
             {activeSlides.map((_, i) => (
