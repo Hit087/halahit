@@ -21,49 +21,51 @@ export default async function HomePage() {
     <>
       <HeroCarousel slides={heroSlides} />
 
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
-        <div className="mb-10 flex items-end justify-between">
-          <div>
-            <h2 className="font-display text-3xl font-bold text-text md:text-4xl">
-              منتجات مميزة
-            </h2>
-            <p className="mt-2 text-text/60">تشكيلة مختارة بعناية</p>
-          </div>
+      {/* منتجات مميزة */}
+      <section className="mx-auto max-w-7xl px-4 pt-6 pb-10 sm:px-6">
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="text-xl sm:text-2xl font-bold text-[#3E2723]">
+            منتجات مميزة
+          </h2>
           <Link
             href="/products"
-            className="text-accent transition hover:underline"
+            className="text-sm font-medium text-[#E91E63] transition hover:underline"
           >
             عرض الكل ←
           </Link>
         </div>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {featured.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
         {featured.length === 0 && (
-          <p className="text-center text-text/50">لا توجد منتجات مميزة حالياً</p>
+          <p className="text-center text-[#3E2723]/50 py-8">لا توجد منتجات مميزة حالياً</p>
         )}
       </section>
 
-      {categoriesWithProducts.map((category) => (
-        <section key={category.id} className="bg-white/50 py-16">
+      {/* الأقسام */}
+      {categoriesWithProducts.map((category, idx) => (
+        <section
+          key={category.id}
+          className={`py-8 ${idx % 2 === 0 ? "bg-[#FDF6F0]" : "bg-white"}`}
+        >
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
-            <div className="mb-10 flex items-end justify-between">
+            <div className="mb-5 flex items-center justify-between">
               <div>
-                <h2 className="font-display text-3xl font-bold text-text md:text-4xl">
+                <h2 className="text-xl sm:text-2xl font-bold text-[#3E2723]">
                   {category.name}
                 </h2>
-                <p className="mt-2 text-text/60">{category.nameEn}</p>
+                <p className="mt-0.5 text-xs text-[#3E2723]/50">{category.nameEn}</p>
               </div>
               <Link
                 href={`/products?category=${category.slug}`}
-                className="text-accent transition hover:underline"
+                className="text-sm font-medium text-[#E91E63] transition hover:underline"
               >
                 عرض الكل ←
               </Link>
             </div>
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {category.products.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
@@ -72,8 +74,9 @@ export default async function HomePage() {
         </section>
       ))}
 
-      <section className="mx-auto max-w-7xl px-4 py-20 text-center sm:px-6">
-        <p className="font-display text-2xl text-text/80 md:text-3xl">
+      {/* تاغلاين */}
+      <section className="bg-[#FDF6F0] py-12 text-center">
+        <p className="font-display text-xl text-[#3E2723]/70 md:text-2xl">
           {settings?.tagline ?? "لكل قطعة ذكرى"}
         </p>
       </section>
