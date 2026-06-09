@@ -8,7 +8,9 @@
   }
 
   body {
-    @apply bg-cream text-text antialiased;
+    background-color: #FDF6F0;
+    color: #3E2723;
+    -webkit-font-smoothing: antialiased;
   }
 }
 
