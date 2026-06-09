@@ -34,14 +34,14 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
   return (
     <div className="mx-auto my-4 max-w-7xl px-3 sm:px-6">
       <section className="relative overflow-hidden rounded-[24px] shadow-[0_8px_32px_rgba(0,0,0,0.10)]">
+
         <motion.div
-          key={slide.id}
           initial={{ opacity: 0.85 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.25 }}
           className="relative"
         >
-          <div className="relative h-[320px] sm:h-[420px] md:h-[480px] w-full">
+          <div className="relative h-[320px] sm:h-[420px] md:h-[480px] w-full bg-[#f7e8e8]">
             <Image
               src={slide.image}
               alt={slide.title}
