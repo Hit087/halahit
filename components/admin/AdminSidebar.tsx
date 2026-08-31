@@ -11,6 +11,7 @@ const links = [
   { href: "/admin/products", label: "المنتجات" },
   { href: "/admin/categories", label: "التصنيفات" },
   { href: "/admin/coupons", label: "الكوبونات" },
+  { href: "/admin/fulfillment", label: "الاستلام والتوصيل" },
   { href: "/admin/orders", label: "الطلبات" },
   { href: "/admin/settings", label: "الإعدادات" },
 ];
