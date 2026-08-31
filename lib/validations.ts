@@ -93,3 +93,12 @@ export const couponApplySchema = z.object({
   code: z.string().min(2).max(30),
   subtotal: z.number().nonnegative(),
 });
+
+// ==================== إضافة جديدة: طرق الاستلام والتوصيل ====================
+export const fulfillmentMethodSchema = z.object({
+  name: z.string().min(1).max(100),
+  type: z.enum(["PICKUP", "DELIVERY"]),
+  price: z.coerce.number().min(0),
+  active: z.coerce.boolean(),
+  sortOrder: z.coerce.number().int().min(0),
+});
