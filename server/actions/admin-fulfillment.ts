@@ -60,8 +60,13 @@ export async function updateFulfillmentMethod(id: string, formData: FormData) {
 export async function deleteFulfillmentMethod(id: string) {
   await guard();
 
-  await prisma.fulfillmentMethod.delete({ where: { id } });
+  try {
+    await prisma.fulfillmentMethod.delete({ where: { id } });
+  } catch {
+    return { success: false, error: "تعذّر حذف الطريقة" };
+  }
+
   revalidatePath("/");
   revalidatePath("/admin/fulfillment");
-  return { success: true };
+  return { success: true, error: undefined as string | undefined };
 }
