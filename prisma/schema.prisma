@@ -1,3 +1,116 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String
+  nameEn    String    @map("name_en")
+  slug      String    @unique
+  image     String?
+  active    Boolean   @default(true)
+  sortOrder Int       @default(0)
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Product {
+  id            String         @id @default(uuid())
+  name          String
+  nameEn        String         @map("name_en")
+  description   String         @db.Text
+  descriptionEn String?        @map("description_en") @db.Text
+  price         Decimal?       @db.Decimal(10, 2)
+  active        Boolean        @default(true)
+  featured      Boolean        @default(false)
+  categoryId    String
+  category      Category       @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  images        ProductImage[]
+  orderItems    OrderItem[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([categoryId])
+  @@index([active, featured])
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  url       String
+  sortOrder Int     @default(0)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+enum CouponType {
+  PERCENTAGE
+  FIXED
+}
+
+model Coupon {
+  id        String     @id @default(cuid())
+  code      String     @unique
+  type      CouponType
+  value     Decimal    @db.Decimal(10, 2)
+  expiresAt DateTime?
+  active    Boolean    @default(true)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  DELIVERED
+  CANCELLED
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  orderNumber     String      @unique
+  customerName    String?
+  customerPhone   String?
+  subtotal        Decimal     @db.Decimal(10, 2)
+  discount        Decimal     @default(0) @db.Decimal(10, 2)
+  total           Decimal     @db.Decimal(10, 2)
+  couponCode      String?
+  whatsappMessage String      @db.Text
+  status          OrderStatus @default(PENDING)
+  items           OrderItem[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  fulfillmentMethod String?
+  fulfillmentPrice  Decimal? @db.Decimal(10, 2)
+  paymentMethod     String?
+  locationLink      String?
+}
+
+model OrderItem {
+  id          String  @id @default(cuid())
+  orderId     String
+  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  productName String
   quantity    Int
   price       Decimal @db.Decimal(10, 2)
 
@@ -22,12 +135,11 @@ model Settings {
   adminPassword     String?
   heroSlides        Json    @default("[]")
 
-  // ==== إضافات جديدة ====
-  onlinePaymentEnabled     Boolean @default(false) // سويتش عام: تفعيل/تعطيل الدفع الإلكتروني بكل الموقع
-  announcementScrolling    Boolean @default(true)  // شريط الإعلانات: متحرك (true) أو ثابت (false)
-  commercialRegNumber      String? // رقم السجل التجاري (يدخله الأدمن يدويًا)
-  commercialLicenseNumber  String? // رقم الرخصة (يدخله الأدمن يدويًا)
-  commercialRegVisible     Boolean @default(false) // سويتش تفعيل/تعطيل عرض السجل والرخصة بالفوتر
+  onlinePaymentEnabled     Boolean @default(false)
+  announcementScrolling    Boolean @default(true)
+  commercialRegNumber      String?
+  commercialLicenseNumber  String?
+  commercialRegVisible     Boolean @default(false)
 }
 
 model AnalyticsEvent {
@@ -42,13 +154,10 @@ model AnalyticsEvent {
   @@index([productId])
 }
 
-// ==================== جداول جديدة كاملة ====================
-
-// طرق الاستلام/التوصيل — يديرها الأدمن بالكامل (إضافة/تعديل/حذف/تفعيل/تعطيل)
 model FulfillmentMethod {
   id        String   @id @default(cuid())
-  name      String   // مثال: "استلام من الفرع"، "توصيل عادي"
-  type      String   // "PICKUP" أو "DELIVERY" — يحدد سلوك واجهة الدفع
+  name      String
+  type      String
   price     Decimal  @default(0) @db.Decimal(10, 2)
   active    Boolean  @default(true)
   sortOrder Int      @default(0)
@@ -56,18 +165,16 @@ model FulfillmentMethod {
   updatedAt DateTime @updatedAt
 }
 
-// طرق الدفع — يديرها الأدمن بالكامل (إضافة/تعديل/حذف/تفعيل/تعطيل)
 model PaymentMethod {
   id        String   @id @default(cuid())
-  name      String   // مثال: "الدفع عند الاستلام"، "بطاقة مدى/فيزا (ميسر)"
-  type      String   // "CASH" أو "GATEWAY" — يحدد هل يوديه لبوابة دفع فعلية أو واتساب مباشرة
+  name      String
+  type      String
   active    Boolean  @default(true)
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-// شريط الإعلانات العلوي — رسالة أو أكثر، يديرها الأدمن
 model AnnouncementBar {
   id        String   @id @default(cuid())
   message   String
