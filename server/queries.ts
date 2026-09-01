@@ -23,6 +23,11 @@ export async function getSettings() {
       theChefzLink: null,
       adminPassword: null,
       heroSlides: [],
+      onlinePaymentEnabled: false,
+      announcementScrolling: true,
+      commercialRegNumber: null,
+      commercialLicenseNumber: null,
+      commercialRegVisible: false,
     };
   }
 }
