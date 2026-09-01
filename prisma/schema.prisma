@@ -183,4 +183,3 @@ model AnnouncementBar {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
-```
