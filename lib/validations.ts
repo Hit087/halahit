@@ -94,11 +94,19 @@ export const couponApplySchema = z.object({
   subtotal: z.number().nonnegative(),
 });
 
-// ==================== إضافة جديدة: طرق الاستلام والتوصيل ====================
+// ==================== طرق الاستلام والتوصيل ====================
 export const fulfillmentMethodSchema = z.object({
   name: z.string().min(1).max(100),
   type: z.enum(["PICKUP", "DELIVERY"]),
   price: z.coerce.number().min(0),
+  active: z.coerce.boolean(),
+  sortOrder: z.coerce.number().int().min(0),
+});
+
+// ==================== إضافة جديدة: طرق الدفع ====================
+export const paymentMethodSchema = z.object({
+  name: z.string().min(1).max(100),
+  type: z.enum(["CASH", "GATEWAY"]),
   active: z.coerce.boolean(),
   sortOrder: z.coerce.number().int().min(0),
 });
