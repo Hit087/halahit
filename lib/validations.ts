@@ -74,10 +74,14 @@ export const heroSlideSchema = z.object({
   active: z.boolean(),
 });
 
+// ==================== تعديل: إضافة طريقة الاستلام/الدفع والموقع ====================
 export const checkoutSchema = z.object({
   customerName: z.string().min(2).max(100),
   customerPhone: z.string().min(8).max(20),
   couponCode: z.string().optional(),
+  fulfillmentMethodId: z.string().min(1, "الرجاء اختيار طريقة الاستلام"),
+  paymentMethodId: z.string().min(1, "الرجاء اختيار طريقة الدفع"),
+  locationLink: z.string().optional(),
   items: z.array(
     z.object({
       productId: z.string(),
@@ -103,7 +107,7 @@ export const fulfillmentMethodSchema = z.object({
   sortOrder: z.coerce.number().int().min(0),
 });
 
-// ==================== إضافة جديدة: طرق الدفع ====================
+// ==================== طرق الدفع ====================
 export const paymentMethodSchema = z.object({
   name: z.string().min(1).max(100),
   type: z.enum(["CASH", "GATEWAY"]),
