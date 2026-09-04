@@ -13,6 +13,7 @@ const links = [
   { href: "/admin/coupons", label: "الكوبونات" },
   { href: "/admin/fulfillment", label: "الاستلام والتوصيل" },
   { href: "/admin/payment-methods", label: "طرق الدفع" },
+  { href: "/admin/pages", label: "الصفحات" },
   { href: "/admin/orders", label: "الطلبات" },
   { href: "/admin/settings", label: "الإعدادات" },
 ];
