@@ -15,6 +15,7 @@ export function buildWhatsAppMessage(params: {
   items: WhatsAppLineItem[];
   subtotal: number;
   discount: number;
+  vatAmount?: number;
   fulfillmentPrice?: number;
   total: number;
   couponCode?: string;
@@ -30,6 +31,7 @@ export function buildWhatsAppMessage(params: {
     items,
     subtotal,
     discount,
+    vatAmount = 0,
     fulfillmentPrice = 0,
     total,
     couponCode,
@@ -82,6 +84,10 @@ export function buildWhatsAppMessage(params: {
     lines.push(
       `🏷️ الخصم${couponCode ? ` (${couponCode})` : ""}: -${formatPrice(discount)}`
     );
+  }
+
+  if (vatAmount > 0) {
+    lines.push(`🧾 ضريبة القيمة المضافة (15%): ${formatPrice(vatAmount)}`);
   }
 
   if (fulfillmentPrice > 0) {
