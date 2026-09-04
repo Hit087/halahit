@@ -1,6 +1,7 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { getSettings } from "@/server/queries";
+import { prisma } from "@/lib/prisma";
 
 export default async function ShopLayout({
   children,
@@ -8,6 +9,12 @@ export default async function ShopLayout({
   children: React.ReactNode;
 }) {
   const settings = await getSettings();
+
+  const pages = await prisma.page.findMany({
+    where: { active: true },
+    orderBy: { sortOrder: "asc" },
+    select: { slug: true, title: true },
+  });
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -28,6 +35,7 @@ export default async function ShopLayout({
         tiktokLink={settings?.tiktokLink}
         kitalink={settings?.kitalink}
         theChefzLink={settings?.theChefzLink}
+        pages={pages}
       />
     </div>
   );
