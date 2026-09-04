@@ -13,7 +13,44 @@ export async function processCheckout(data: unknown) {
     return { success: false as const, error: "بيانات الطلب غير صالحة" };
   }
 
-  const { customerName, customerPhone, couponCode, items } = parsed.data;
+  const {
+    customerName,
+    customerPhone,
+    couponCode,
+    fulfillmentMethodId,
+    paymentMethodId,
+    locationLink,
+    items,
+  } = parsed.data;
+
+  // ==== التحقق من طريقة الاستلام/التوصيل ====
+  const fulfillmentMethod = await prisma.fulfillmentMethod.findFirst({
+    where: { id: fulfillmentMethodId, active: true },
+  });
+  if (!fulfillmentMethod) {
+    return { success: false as const, error: "طريقة الاستلام غير متاحة" };
+  }
+  if (fulfillmentMethod.type === "DELIVERY" && !locationLink) {
+    return {
+      success: false as const,
+      error: "الرجاء تحديد موقع التوصيل (عبر الموقع الحالي أو لصق رابط الخريطة)",
+    };
+  }
+
+  // ==== التحقق من طريقة الدفع ====
+  const paymentMethod = await prisma.paymentMethod.findFirst({
+    where: { id: paymentMethodId, active: true },
+  });
+  if (!paymentMethod) {
+    return { success: false as const, error: "طريقة الدفع غير متاحة" };
+  }
+  if (paymentMethod.type === "GATEWAY") {
+    // بوابة الدفع الإلكتروني لسا ما اتفعّلت تقنيًا (قادمة لاحقًا)
+    return {
+      success: false as const,
+      error: "الدفع الإلكتروني غير مفعّل حاليًا، الرجاء اختيار الدفع عند الاستلام",
+    };
+  }
 
   const productIds = items.map((i) => i.productId);
   const products = await prisma.product.findMany({
@@ -34,6 +71,7 @@ export async function processCheckout(data: unknown) {
       nameEn: product.nameEn,
       price,
       quantity: item.quantity,
+      imageUrl: product.images[0]?.url,
     };
   });
 
@@ -60,7 +98,8 @@ export async function processCheckout(data: unknown) {
     appliedCoupon = coupon.code;
   }
 
-  const total = Math.max(0, subtotal - discount);
+  const fulfillmentPrice = Number(fulfillmentMethod.price);
+  const total = Math.max(0, subtotal - discount + fulfillmentPrice);
   const orderNumber = generateOrderNumber();
 
   const settings = await prisma.settings.findUnique({
@@ -74,9 +113,13 @@ export async function processCheckout(data: unknown) {
     items: validatedItems,
     subtotal,
     discount,
+    fulfillmentPrice,
     total,
     couponCode: appliedCoupon,
     storeName: settings?.storeName,
+    fulfillmentMethodName: fulfillmentMethod.name,
+    paymentMethodName: paymentMethod.name,
+    locationLink,
   });
 
   const order = await prisma.order.create({
@@ -89,6 +132,10 @@ export async function processCheckout(data: unknown) {
       total,
       couponCode: appliedCoupon,
       whatsappMessage,
+      fulfillmentMethod: fulfillmentMethod.name,
+      fulfillmentPrice,
+      paymentMethod: paymentMethod.name,
+      locationLink,
       items: {
         create: validatedItems.map((item) => ({
           productId: item.productId,
