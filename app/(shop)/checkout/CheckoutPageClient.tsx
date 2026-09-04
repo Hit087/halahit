@@ -26,12 +26,14 @@ type PaymentMethod = {
 export function CheckoutPageClient({
   fulfillmentMethods,
   paymentMethods,
+  vatEnabled = true,
 }: {
   fulfillmentMethods: FulfillmentMethod[];
   paymentMethods: PaymentMethod[];
+  vatEnabled?: boolean;
 }) {
   const locale = useLocaleStore((s) => s.locale);
-  const { items, coupon, getSubtotal, getTotal, clearCart } = useCartStore();
+  const { items, coupon, getSubtotal, getVat, getTotal, clearCart } = useCartStore();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
@@ -53,7 +55,9 @@ export function CheckoutPageClient({
   const fulfillmentPrice = selectedFulfillment?.price ?? 0;
 
   const subtotal = getSubtotal();
-  const totalBeforeFulfillment = getTotal();
+  const discount = coupon?.discount ?? 0;
+  const vat = vatEnabled ? getVat() : 0;
+  const totalBeforeFulfillment = vatEnabled ? getTotal() : Math.max(0, subtotal - discount);
   const total = totalBeforeFulfillment + (isDelivery ? fulfillmentPrice : 0);
 
   if (items.length === 0) {
@@ -231,6 +235,22 @@ export function CheckoutPageClient({
               <span>{formatPrice(item.price * item.quantity)}</span>
             </div>
           ))}
+          <div className="border-t border-beige pt-2 flex justify-between text-sm text-text/60">
+            <span>{t("subtotal", locale) ?? "المجموع الفرعي"}</span>
+            <span>{formatPrice(subtotal)}</span>
+          </div>
+          {discount > 0 && (
+            <div className="flex justify-between text-sm text-accent">
+              <span>الخصم</span>
+              <span>-{formatPrice(discount)}</span>
+            </div>
+          )}
+          {vatEnabled && vat > 0 && (
+            <div className="flex justify-between text-sm text-text/60">
+              <span>ضريبة القيمة المضافة (15%)</span>
+              <span>{formatPrice(vat)}</span>
+            </div>
+          )}
           {isDelivery && fulfillmentPrice > 0 && (
             <div className="flex justify-between text-sm text-text/60">
               <span>رسوم التوصيل</span>
