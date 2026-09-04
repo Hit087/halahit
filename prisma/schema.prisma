@@ -102,6 +102,9 @@ model Order {
   fulfillmentPrice  Decimal? @db.Decimal(10, 2)
   paymentMethod     String?
   locationLink      String?
+
+  // ==== إضافة جديدة: مبلغ الضريبة ====
+  vatAmount Decimal? @db.Decimal(10, 2)
 }
 
 model OrderItem {
@@ -140,6 +143,9 @@ model Settings {
   commercialRegNumber      String?
   commercialLicenseNumber  String?
   commercialRegVisible     Boolean @default(false)
+
+  // ==== إضافة جديدة: تفعيل عرض الضريبة ====
+  vatEnabled Boolean @default(true)
 }
 
 model AnalyticsEvent {
@@ -178,6 +184,18 @@ model PaymentMethod {
 model AnnouncementBar {
   id        String   @id @default(cuid())
   message   String
+  active    Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ==================== جدول جديد: صفحات محتوى حرة (قانونية وغيرها) ====================
+model Page {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  title     String
+  content   String   @db.Text
   active    Boolean  @default(true)
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
