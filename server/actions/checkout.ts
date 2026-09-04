@@ -104,14 +104,16 @@ export async function processCheckout(data: unknown) {
     where: { id: "default" },
   });
 
+  // ==== تصحيح: الأسعار شاملة الضريبة أصلًا — نستخرج مبلغها للعرض
+  // والتوثيق فقط، بدون إضافته فوق الإجمالي ====
   const vatEnabled = settings?.vatEnabled ?? true;
-  const netBeforeVat = Math.max(0, subtotal - discount);
+  const netInclusive = Math.max(0, subtotal - discount);
   const vatAmount = vatEnabled
-    ? Math.round(netBeforeVat * VAT_RATE * 100) / 100
+    ? Math.round((netInclusive - netInclusive / (1 + VAT_RATE)) * 100) / 100
     : 0;
 
   const fulfillmentPrice = Number(fulfillmentMethod.price);
-  const total = Math.max(0, netBeforeVat + vatAmount + fulfillmentPrice);
+  const total = Math.max(0, netInclusive + fulfillmentPrice);
   const orderNumber = generateOrderNumber();
 
   const whatsappMessage = buildWhatsAppMessage({
