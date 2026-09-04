@@ -5,6 +5,7 @@ export type WhatsAppLineItem = {
   nameEn?: string;
   quantity: number;
   price: number;
+  imageUrl?: string;
 };
 
 export function buildWhatsAppMessage(params: {
@@ -14,9 +15,13 @@ export function buildWhatsAppMessage(params: {
   items: WhatsAppLineItem[];
   subtotal: number;
   discount: number;
+  fulfillmentPrice?: number;
   total: number;
   couponCode?: string;
   storeName?: string;
+  fulfillmentMethodName?: string;
+  paymentMethodName?: string;
+  locationLink?: string;
 }): string {
   const {
     orderNumber,
@@ -25,9 +30,13 @@ export function buildWhatsAppMessage(params: {
     items,
     subtotal,
     discount,
+    fulfillmentPrice = 0,
     total,
     couponCode,
     storeName = "Hit | هيت",
+    fulfillmentMethodName,
+    paymentMethodName,
+    locationLink,
   } = params;
 
   const lines: string[] = [
@@ -36,9 +45,21 @@ export function buildWhatsAppMessage(params: {
     `📋 رقم الطلب: *${orderNumber}*`,
     `👤 الاسم: ${customerName}`,
     `📱 الجوال: ${customerPhone}`,
-    ``,
-    `🛒 *تفاصيل الطلب:*`,
   ];
+
+  if (fulfillmentMethodName) {
+    lines.push(`🚚 طريقة الاستلام: ${fulfillmentMethodName}`);
+  }
+
+  if (locationLink) {
+    lines.push(`📍 الموقع: ${locationLink}`);
+  }
+
+  if (paymentMethodName) {
+    lines.push(`💳 طريقة الدفع: ${paymentMethodName}`);
+  }
+
+  lines.push(``, `🛒 *تفاصيل الطلب:*`);
 
   items.forEach((item, i) => {
     const lineTotal = item.price * item.quantity;
@@ -46,6 +67,9 @@ export function buildWhatsAppMessage(params: {
       `${i + 1}. ${item.name}`,
       `   الكمية: ${item.quantity} × ${formatPrice(item.price)} = ${formatPrice(lineTotal)}`
     );
+    if (item.imageUrl) {
+      lines.push(`   🖼️ الصورة: ${item.imageUrl}`);
+    }
   });
 
   lines.push(
@@ -58,6 +82,10 @@ export function buildWhatsAppMessage(params: {
     lines.push(
       `🏷️ الخصم${couponCode ? ` (${couponCode})` : ""}: -${formatPrice(discount)}`
     );
+  }
+
+  if (fulfillmentPrice > 0) {
+    lines.push(`🚚 رسوم التوصيل: ${formatPrice(fulfillmentPrice)}`);
   }
 
   lines.push(
