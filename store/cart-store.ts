@@ -77,19 +77,21 @@ export const useCartStore = create<CartState>()(
       getSubtotal: () =>
         get().items.reduce((sum, i) => sum + i.price * i.quantity, 0),
 
-      // ==== إضافة جديدة: حساب ضريبة القيمة المضافة (15%) على الصافي بعد الخصم ====
+      // ==== تصحيح: الأسعار شاملة الضريبة أصلًا، فنستخرج مبلغها من داخل
+      // الصافي بعد الخصم للعرض فقط — لا نضيفه فوق الإجمالي ====
       getVat: () => {
         const subtotal = get().getSubtotal();
         const discount = get().coupon?.discount ?? 0;
-        const netBeforeVat = Math.max(0, subtotal - discount);
-        return Math.round(netBeforeVat * VAT_RATE * 100) / 100;
+        const netInclusive = Math.max(0, subtotal - discount);
+        const vat = netInclusive - netInclusive / (1 + VAT_RATE);
+        return Math.round(vat * 100) / 100;
       },
 
+      // ==== الإجمالي لا يضيف الضريبة فوق، لأنها أصلًا جزء من السعر ====
       getTotal: () => {
         const subtotal = get().getSubtotal();
         const discount = get().coupon?.discount ?? 0;
-        const vat = get().getVat();
-        return Math.max(0, subtotal - discount + vat);
+        return Math.max(0, subtotal - discount);
       },
 
       getItemCount: () =>
