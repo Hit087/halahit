@@ -3,7 +3,7 @@ import { decimalToNumber } from "@/lib/utils";
 import { CheckoutPageClient } from "./CheckoutPageClient";
 
 export default async function CheckoutPage() {
-  const [fulfillmentMethodsRaw, paymentMethods] = await Promise.all([
+  const [fulfillmentMethodsRaw, paymentMethods, settings] = await Promise.all([
     prisma.fulfillmentMethod.findMany({
       where: { active: true },
       orderBy: { sortOrder: "asc" },
@@ -12,6 +12,7 @@ export default async function CheckoutPage() {
       where: { active: true },
       orderBy: { sortOrder: "asc" },
     }),
+    prisma.settings.findUnique({ where: { id: "default" } }),
   ]);
 
   const fulfillmentMethods = fulfillmentMethodsRaw.map((m) => ({
@@ -26,6 +27,7 @@ export default async function CheckoutPage() {
       <CheckoutPageClient
         fulfillmentMethods={fulfillmentMethods}
         paymentMethods={paymentMethods}
+        vatEnabled={settings?.vatEnabled ?? true}
       />
     </div>
   );
