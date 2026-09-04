@@ -74,7 +74,6 @@ export const heroSlideSchema = z.object({
   active: z.boolean(),
 });
 
-// ==================== تعديل: إضافة طريقة الاستلام/الدفع والموقع ====================
 export const checkoutSchema = z.object({
   customerName: z.string().min(2).max(100),
   customerPhone: z.string().min(8).max(20),
@@ -111,6 +110,15 @@ export const fulfillmentMethodSchema = z.object({
 export const paymentMethodSchema = z.object({
   name: z.string().min(1).max(100),
   type: z.enum(["CASH", "GATEWAY"]),
+  active: z.coerce.boolean(),
+  sortOrder: z.coerce.number().int().min(0),
+});
+
+// ==================== إضافة جديدة: صفحات المحتوى الحرة ====================
+export const pageSchema = z.object({
+  slug: z.string().min(1).max(100).regex(/^[a-z0-9-]+$/, "المسار يجب أن يكون بحروف إنجليزية صغيرة وأرقام وشرطات فقط"),
+  title: z.string().min(1).max(200),
+  content: z.string().min(1),
   active: z.coerce.boolean(),
   sortOrder: z.coerce.number().int().min(0),
 });
