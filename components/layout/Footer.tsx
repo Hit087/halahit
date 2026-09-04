@@ -15,6 +15,7 @@ type FooterProps = {
   tiktokLink?: string | null;
   kitalink?: string | null;
   theChefzLink?: string | null;
+  pages?: { slug: string; title: string }[];
 };
 
 export function Footer({
@@ -29,6 +30,7 @@ export function Footer({
   tiktokLink,
   kitalink,
   theChefzLink,
+  pages = [],
 }: FooterProps) {
   const locale = useLocaleStore((s) => s.locale);
 
@@ -115,7 +117,22 @@ export function Footer({
           </div>
         </div>
 
-        <div className="mt-10 border-t border-cream/20 pt-6 text-center text-sm text-cream/60">
+        {/* ==== إضافة جديدة: روابط الصفحات (شروط، خصوصية، إلخ) ==== */}
+        {pages.length > 0 && (
+          <div className="mt-8 flex flex-wrap justify-center gap-x-6 gap-y-2 border-t border-cream/20 pt-6 text-sm">
+            {pages.map((p) => (
+              <a
+                key={p.slug}
+                href={`/pages/${p.slug}`}
+                className="text-cream/70 transition hover:text-primary hover:underline"
+              >
+                {p.title}
+              </a>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-6 border-t border-cream/20 pt-6 text-center text-sm text-cream/60">
           © {new Date().getFullYear()} {storeName}. All rights reserved.
         </div>
       </div>
