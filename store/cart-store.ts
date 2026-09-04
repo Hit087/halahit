@@ -4,6 +4,8 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { CartItem } from "@/types";
 
+export const VAT_RATE = 0.15;
+
 type CouponState = {
   code: string;
   discount: number;
@@ -19,6 +21,7 @@ type CartState = {
   setCoupon: (coupon: CouponState) => void;
   clearCoupon: () => void;
   getSubtotal: () => number;
+  getVat: () => number;
   getTotal: () => number;
   getItemCount: () => number;
 };
@@ -74,10 +77,19 @@ export const useCartStore = create<CartState>()(
       getSubtotal: () =>
         get().items.reduce((sum, i) => sum + i.price * i.quantity, 0),
 
+      // ==== إضافة جديدة: حساب ضريبة القيمة المضافة (15%) على الصافي بعد الخصم ====
+      getVat: () => {
+        const subtotal = get().getSubtotal();
+        const discount = get().coupon?.discount ?? 0;
+        const netBeforeVat = Math.max(0, subtotal - discount);
+        return Math.round(netBeforeVat * VAT_RATE * 100) / 100;
+      },
+
       getTotal: () => {
         const subtotal = get().getSubtotal();
         const discount = get().coupon?.discount ?? 0;
-        return Math.max(0, subtotal - discount);
+        const vat = get().getVat();
+        return Math.max(0, subtotal - discount + vat);
       },
 
       getItemCount: () =>
