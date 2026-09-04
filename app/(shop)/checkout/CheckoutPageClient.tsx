@@ -56,9 +56,11 @@ export function CheckoutPageClient({
 
   const subtotal = getSubtotal();
   const discount = coupon?.discount ?? 0;
+  // ==== الأسعار شاملة الضريبة أصلًا: getVat() تستخرجها للعرض فقط،
+  // getTotal() لا يضيفها فوق (هي أصلًا محسوبة بالسعر) ====
   const vat = vatEnabled ? getVat() : 0;
-  const totalBeforeFulfillment = vatEnabled ? getTotal() : Math.max(0, subtotal - discount);
-  const total = totalBeforeFulfillment + (isDelivery ? fulfillmentPrice : 0);
+  const netInclusive = getTotal();
+  const total = netInclusive + (isDelivery ? fulfillmentPrice : 0);
 
   if (items.length === 0) {
     return (
@@ -246,8 +248,8 @@ export function CheckoutPageClient({
             </div>
           )}
           {vatEnabled && vat > 0 && (
-            <div className="flex justify-between text-sm text-text/60">
-              <span>ضريبة القيمة المضافة (15%)</span>
+            <div className="flex justify-between text-xs text-text/40">
+              <span>شامل ضريبة القيمة المضافة (15%)</span>
               <span>{formatPrice(vat)}</span>
             </div>
           )}
