@@ -28,6 +28,7 @@ export async function getSettings() {
       commercialRegNumber: null,
       commercialLicenseNumber: null,
       commercialRegVisible: false,
+      vatEnabled: true,
     };
   }
 }
