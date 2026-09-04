@@ -7,6 +7,8 @@ import { generateOrderNumber } from "@/lib/utils";
 import { checkoutSchema } from "@/lib/validations";
 import { trackEvent } from "@/server/analytics";
 
+const VAT_RATE = 0.15;
+
 export async function processCheckout(data: unknown) {
   const parsed = checkoutSchema.safeParse(data);
   if (!parsed.success) {
@@ -98,13 +100,19 @@ export async function processCheckout(data: unknown) {
     appliedCoupon = coupon.code;
   }
 
-  const fulfillmentPrice = Number(fulfillmentMethod.price);
-  const total = Math.max(0, subtotal - discount + fulfillmentPrice);
-  const orderNumber = generateOrderNumber();
-
   const settings = await prisma.settings.findUnique({
     where: { id: "default" },
   });
+
+  const vatEnabled = settings?.vatEnabled ?? true;
+  const netBeforeVat = Math.max(0, subtotal - discount);
+  const vatAmount = vatEnabled
+    ? Math.round(netBeforeVat * VAT_RATE * 100) / 100
+    : 0;
+
+  const fulfillmentPrice = Number(fulfillmentMethod.price);
+  const total = Math.max(0, netBeforeVat + vatAmount + fulfillmentPrice);
+  const orderNumber = generateOrderNumber();
 
   const whatsappMessage = buildWhatsAppMessage({
     orderNumber,
@@ -113,6 +121,7 @@ export async function processCheckout(data: unknown) {
     items: validatedItems,
     subtotal,
     discount,
+    vatAmount,
     fulfillmentPrice,
     total,
     couponCode: appliedCoupon,
@@ -130,6 +139,7 @@ export async function processCheckout(data: unknown) {
       subtotal,
       discount,
       total,
+      vatAmount,
       couponCode: appliedCoupon,
       whatsappMessage,
       fulfillmentMethod: fulfillmentMethod.name,
