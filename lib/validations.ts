@@ -14,6 +14,11 @@ export const productSchema = z.object({
     (val) => (val === "" || val === null || val === undefined ? undefined : Number(val)),
     z.number().min(0).optional()
   ),
+  // ==== إضافة جديدة: الكمية المتوفرة (فارغة = غير متتبَّعة) ====
+  stock: z.preprocess(
+    (val) => (val === "" || val === null || val === undefined ? undefined : Number(val)),
+    z.number().int().min(0).optional()
+  ),
   categoryId: z.string().min(1),
   active: z.coerce.boolean(),
   featured: z.coerce.boolean(),
@@ -97,7 +102,6 @@ export const couponApplySchema = z.object({
   subtotal: z.number().nonnegative(),
 });
 
-// ==================== طرق الاستلام والتوصيل ====================
 export const fulfillmentMethodSchema = z.object({
   name: z.string().min(1).max(100),
   type: z.enum(["PICKUP", "DELIVERY"]),
@@ -106,7 +110,6 @@ export const fulfillmentMethodSchema = z.object({
   sortOrder: z.coerce.number().int().min(0),
 });
 
-// ==================== طرق الدفع ====================
 export const paymentMethodSchema = z.object({
   name: z.string().min(1).max(100),
   type: z.enum(["CASH", "GATEWAY"]),
@@ -114,7 +117,6 @@ export const paymentMethodSchema = z.object({
   sortOrder: z.coerce.number().int().min(0),
 });
 
-// ==================== إضافة جديدة: صفحات المحتوى الحرة ====================
 export const pageSchema = z.object({
   slug: z.string().min(1).max(100).regex(/^[a-z0-9-]+$/, "المسار يجب أن يكون بحروف إنجليزية صغيرة وأرقام وشرطات فقط"),
   title: z.string().min(1).max(200),
