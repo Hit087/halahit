@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -7,15 +8,25 @@ import { formatPrice } from "@/lib/utils";
 import { useLocaleStore } from "@/store/locale-store";
 import { localizedName, t } from "@/lib/i18n";
 import { useCartStore } from "@/store/cart-store";
+import { toggleWishlist } from "@/server/actions/wishlist";
 import type { ProductWithImages } from "@/types";
 
-export function ProductCard({ product }: { product: ProductWithImages }) {
+export function ProductCard({
+  product,
+  initialInWishlist = false,
+}: {
+  product: ProductWithImages;
+  initialInWishlist?: boolean;
+}) {
   const locale = useLocaleStore((s) => s.locale);
   const addItem = useCartStore((s) => s.addItem);
   const image = product.images[0]?.url ?? "/uploads/placeholder.svg";
 
-  // ==== إضافة جديدة: نفدت الكمية فقط إذا كان المخزون متتبَّعًا (رقم) وصفر أو أقل ====
   const isOutOfStock = product.stock !== null && product.stock <= 0;
+
+  // ==== إضافة جديدة: حالة المفضلة ====
+  const [inWishlist, setInWishlist] = useState(initialInWishlist);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
 
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -27,6 +38,19 @@ export function ProductCard({ product }: { product: ProductWithImages }) {
       price: product.price ?? 0,
       image,
     });
+  };
+
+  const handleWishlistToggle = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (wishlistLoading) return;
+    setWishlistLoading(true);
+    const result = await toggleWishlist(product.id);
+    setWishlistLoading(false);
+    if (result.success) {
+      setInWishlist(result.inWishlist);
+    } else if (result.error) {
+      window.location.href = "/account/login";
+    }
   };
 
   return (
@@ -53,6 +77,23 @@ export function ProductCard({ product }: { product: ProductWithImages }) {
               {locale === "ar" ? "نفذت الكمية" : "Out of stock"}
             </span>
           )}
+
+          {/* ==== إضافة جديدة: زر المفضلة ==== */}
+          <button
+            onClick={handleWishlistToggle}
+            disabled={wishlistLoading}
+            aria-label="المفضلة"
+            className="absolute top-2 left-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 shadow-sm transition hover:scale-110"
+          >
+            <svg
+              className={`h-4 w-4 transition ${inWishlist ? "fill-[#E91E63] text-[#E91E63]" : "fill-none text-[#3E2723]/50"}`}
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+            </svg>
+          </button>
         </div>
       </Link>
 
