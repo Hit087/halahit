@@ -14,6 +14,7 @@ const links = [
   { href: "/admin/fulfillment", label: "الاستلام والتوصيل" },
   { href: "/admin/payment-methods", label: "طرق الدفع" },
   { href: "/admin/pages", label: "الصفحات" },
+  { href: "/admin/announcements", label: "شريط الإعلانات" },
   { href: "/admin/orders", label: "الطلبات" },
   { href: "/admin/settings", label: "الإعدادات" },
 ];
