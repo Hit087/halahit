@@ -1,5 +1,6 @@
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
 import { loginSchema } from "./validations";
 
@@ -17,25 +18,29 @@ export const authOptions: NextAuthOptions = {
 
         const { email, password } = parsed.data;
 
-        if (password !== "susu.s.hit2297") return null;
-
         const user = await prisma.user.findUnique({
           where: { email: email.toLowerCase() },
         });
 
-        if (!user) return null;
+        if (!user || !user.passwordHash) return null;
+
+        // ==== تصحيح أمني: التحقق الفعلي من كلمة المرور المشفّرة ====
+        // (بدل المقارنة السابقة مع نص صريح مكتوب بالكود)
+        const isValid = await bcrypt.compare(password, user.passwordHash);
+        if (!isValid) return null;
 
         return {
           id: user.id,
           email: user.email,
-          name: user.name ?? "Admin",
+          name: user.name ?? "",
+          role: user.role,
         };
       },
     }),
   ],
   session: {
     strategy: "jwt",
-    maxAge: 24 * 60 * 60,
+    maxAge: 30 * 24 * 60 * 60,
   },
   pages: {
     signIn: "/admin/login",
@@ -45,6 +50,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.email = user.email;
+        token.role = (user as { role?: string }).role ?? "CUSTOMER";
       }
       return token;
     },
@@ -52,6 +58,7 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.id as string;
         session.user.email = token.email as string;
+        (session.user as { role?: string }).role = token.role as string;
       }
       return session;
     },
