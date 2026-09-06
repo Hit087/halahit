@@ -18,6 +18,7 @@ type ProductFormProps = {
     description: string;
     descriptionEn: string;
     price: number;
+    stock: number | null;
     categoryId: string;
     active: boolean;
     featured: boolean;
@@ -79,13 +80,25 @@ export function ProductForm({ categories, product }: ProductFormProps) {
           />
         </div>
         <Input
-  id="price"
-  name="price"
-  type="number"
-  step="0.01"
-  label="السعر (ر.س)"
-  defaultValue={product?.price}
-/>
+          id="price"
+          name="price"
+          type="number"
+          step="0.01"
+          label="السعر (ر.س)"
+          defaultValue={product?.price}
+        />
+
+        {/* ==== إضافة جديدة: الكمية المتوفرة ==== */}
+        <Input
+          id="stock"
+          name="stock"
+          type="number"
+          step="1"
+          min="0"
+          label="الكمية المتوفرة (اتركه فارغًا إذا لا تريد تتبّع المخزون)"
+          defaultValue={product?.stock ?? ""}
+        />
+
         <div>
           <label className="mb-1.5 block text-sm font-medium">التصنيف</label>
           <select
