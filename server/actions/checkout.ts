@@ -47,7 +47,6 @@ export async function processCheckout(data: unknown) {
     return { success: false as const, error: "طريقة الدفع غير متاحة" };
   }
   if (paymentMethod.type === "GATEWAY") {
-    // بوابة الدفع الإلكتروني لسا ما اتفعّلت تقنيًا (قادمة لاحقًا)
     return {
       success: false as const,
       error: "الدفع الإلكتروني غير مفعّل حاليًا، الرجاء اختيار الدفع عند الاستلام",
@@ -62,6 +61,17 @@ export async function processCheckout(data: unknown) {
 
   if (products.length !== productIds.length) {
     return { success: false as const, error: "بعض المنتجات غير متوفرة" };
+  }
+
+  // ==== إضافة جديدة: التحقق من كفاية الكمية المتوفرة ====
+  for (const item of items) {
+    const product = products.find((p) => p.id === item.productId)!;
+    if (product.stock !== null && product.stock < item.quantity) {
+      return {
+        success: false as const,
+        error: `الكمية المتوفرة من "${product.name}" غير كافية (المتوفر: ${product.stock})`,
+      };
+    }
   }
 
   const validatedItems = items.map((item) => {
@@ -104,8 +114,6 @@ export async function processCheckout(data: unknown) {
     where: { id: "default" },
   });
 
-  // ==== تصحيح: الأسعار شاملة الضريبة أصلًا — نستخرج مبلغها للعرض
-  // والتوثيق فقط، بدون إضافته فوق الإجمالي ====
   const vatEnabled = settings?.vatEnabled ?? true;
   const netInclusive = Math.max(0, subtotal - discount);
   const vatAmount = vatEnabled
@@ -133,31 +141,47 @@ export async function processCheckout(data: unknown) {
     locationLink,
   });
 
-  const order = await prisma.order.create({
-    data: {
-      orderNumber,
-      customerName,
-      customerPhone,
-      subtotal,
-      discount,
-      total,
-      vatAmount,
-      couponCode: appliedCoupon,
-      whatsappMessage,
-      fulfillmentMethod: fulfillmentMethod.name,
-      fulfillmentPrice,
-      paymentMethod: paymentMethod.name,
-      locationLink,
-      items: {
-        create: validatedItems.map((item) => ({
-          productId: item.productId,
-          productName: item.name,
-          quantity: item.quantity,
-          price: item.price,
-        })),
+  // ==== إضافة جديدة: خصم الكمية المتوفرة (فقط للمنتجات المتتبَّعة) + إنشاء الطلب بعملية واحدة ====
+  const stockUpdates = products
+    .filter((p) => p.stock !== null)
+    .map((p) => {
+      const item = validatedItems.find((i) => i.productId === p.id)!;
+      return prisma.product.update({
+        where: { id: p.id },
+        data: { stock: { decrement: item.quantity } },
+      });
+    });
+
+  const results = await prisma.$transaction([
+    ...stockUpdates,
+    prisma.order.create({
+      data: {
+        orderNumber,
+        customerName,
+        customerPhone,
+        subtotal,
+        discount,
+        total,
+        vatAmount,
+        couponCode: appliedCoupon,
+        whatsappMessage,
+        fulfillmentMethod: fulfillmentMethod.name,
+        fulfillmentPrice,
+        paymentMethod: paymentMethod.name,
+        locationLink,
+        items: {
+          create: validatedItems.map((item) => ({
+            productId: item.productId,
+            productName: item.name,
+            quantity: item.quantity,
+            price: item.price,
+          })),
+        },
       },
-    },
-  });
+    }),
+  ]);
+
+  const order = results[results.length - 1] as { id: string };
 
   await trackEvent("ORDER", "/checkout", undefined, { orderId: order.id });
 
