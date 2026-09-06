@@ -33,4 +33,6 @@ export type ProductWithImages = {
   categoryId: string;
   category?: { name: string; nameEn: string; slug: string };
   images: { id: string; url: string; sortOrder: number }[];
+  // ==== إضافة جديدة: الكمية المتوفرة (null = غير متتبَّعة) ====
+  stock: number | null;
 };
