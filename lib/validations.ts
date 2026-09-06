@@ -5,6 +5,19 @@ export const loginSchema = z.object({
   password: z.string().min(6),
 });
 
+// ==================== إضافة جديدة: تسجيل حساب عميل ====================
+export const registerSchema = z
+  .object({
+    name: z.string().min(2).max(100),
+    email: z.string().email(),
+    password: z.string().min(6).max(100),
+    confirmPassword: z.string().min(6).max(100),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "كلمتا المرور غير متطابقتين",
+    path: ["confirmPassword"],
+  });
+
 export const productSchema = z.object({
   name: z.string().min(1).max(200),
   nameEn: z.string().min(1).max(200),
@@ -14,7 +27,6 @@ export const productSchema = z.object({
     (val) => (val === "" || val === null || val === undefined ? undefined : Number(val)),
     z.number().min(0).optional()
   ),
-  // ==== إضافة جديدة: الكمية المتوفرة (فارغة = غير متتبَّعة) ====
   stock: z.preprocess(
     (val) => (val === "" || val === null || val === undefined ? undefined : Number(val)),
     z.number().int().min(0).optional()
@@ -41,6 +53,7 @@ export const couponSchema = z.object({
   active: z.coerce.boolean(),
 });
 
+// ==================== تعديل: إضافة الضريبة والسجل التجاري ====================
 export const settingsSchema = z.object({
   storeName: z.string().min(1).max(200),
   tagline: z.string().max(300),
@@ -55,6 +68,10 @@ export const settingsSchema = z.object({
   snapchatLink: z.string().url().optional().or(z.literal("")),
   kitalink: z.string().url().optional().or(z.literal("")),
   theChefzLink: z.string().url().optional().or(z.literal("")),
+  vatEnabled: z.coerce.boolean(),
+  commercialRegNumber: z.string().optional().or(z.literal("")),
+  commercialLicenseNumber: z.string().optional().or(z.literal("")),
+  commercialRegVisible: z.coerce.boolean(),
 });
 
 export const adminPasswordSchema = z
@@ -79,9 +96,11 @@ export const heroSlideSchema = z.object({
   active: z.boolean(),
 });
 
+// ==================== تعديل: إضافة بريد اختياري للطلب ====================
 export const checkoutSchema = z.object({
   customerName: z.string().min(2).max(100),
   customerPhone: z.string().min(8).max(20),
+  customerEmail: z.string().email().optional().or(z.literal("")),
   couponCode: z.string().optional(),
   fulfillmentMethodId: z.string().min(1, "الرجاء اختيار طريقة الاستلام"),
   paymentMethodId: z.string().min(1, "الرجاء اختيار طريقة الدفع"),
@@ -123,4 +142,16 @@ export const pageSchema = z.object({
   content: z.string().min(1),
   active: z.coerce.boolean(),
   sortOrder: z.coerce.number().int().min(0),
+});
+
+// ==================== إضافة جديدة: شريط الإعلانات ====================
+export const announcementBarSchema = z.object({
+  message: z.string().min(1).max(300),
+  active: z.coerce.boolean(),
+  sortOrder: z.coerce.number().int().min(0),
+});
+
+// ==================== إضافة جديدة: النشرة البريدية ====================
+export const newsletterSchema = z.object({
+  email: z.string().email(),
 });
