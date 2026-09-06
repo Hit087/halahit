@@ -8,13 +8,23 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+enum Role {
+  ADMIN
+  CUSTOMER
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
   passwordHash String
   name         String?
+  // ==== إضافة جديدة: دور المستخدم (أدمن أو عميل) ====
+  role         Role     @default(CUSTOMER)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  orders   Order[]
+  wishlist WishlistItem[]
 }
 
 model Category {
@@ -43,10 +53,10 @@ model Product {
   category      Category       @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   images        ProductImage[]
   orderItems    OrderItem[]
+  wishlistedBy  WishlistItem[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
-  // ==== إضافة جديدة: الكمية المتوفرة (فارغة = غير متتبَّعة/غير محدودة) ====
   stock Int?
 
   @@index([categoryId])
@@ -107,6 +117,12 @@ model Order {
   locationLink      String?
 
   vatAmount Decimal? @db.Decimal(10, 2)
+
+  // ==== إضافة جديدة: ربط الطلب بحساب عميل (اختياري) + بريده + رمز تتبع آمن ====
+  customerId    String?
+  customer      User?    @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  customerEmail String?
+  trackingToken String   @unique @default(cuid())
 }
 
 model OrderItem {
@@ -200,4 +216,23 @@ model Page {
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// ==================== جدول جديد: المفضلة ====================
+model WishlistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+}
+
+// ==================== جدول جديد: النشرة البريدية ====================
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
 }
