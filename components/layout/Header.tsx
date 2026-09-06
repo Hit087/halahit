@@ -9,12 +9,19 @@ import { useLocaleStore } from "@/store/locale-store";
 import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
-export function Header({ logo, storeName }: { logo?: string | null; storeName: string }) {
+export function Header({
+  logo,
+  storeName,
+  isLoggedIn = false,
+}: {
+  logo?: string | null;
+  storeName: string;
+  isLoggedIn?: boolean;
+}) {
   const itemCount = useCartStore((s) => s.getItemCount());
   const { locale, toggleLocale } = useLocaleStore();
   const router = useRouter();
 
-  // ==== إضافة جديدة: صندوق بحث قابل للطي ====
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
 
@@ -30,7 +37,6 @@ export function Header({ logo, storeName }: { logo?: string | null; storeName: s
     <header className="sticky top-0 z-50 bg-[#FDF6F0] border-b border-[#f0e0d6]/60 shadow-sm">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
 
-        {/* يسار: زر السلة + زر البحث */}
         <div className="flex items-center gap-2">
           <Link
             href="/cart"
@@ -60,9 +66,19 @@ export function Header({ logo, storeName }: { logo?: string | null; storeName: s
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z" />
             </svg>
           </button>
+
+          {/* ==== إضافة جديدة: أيقونة الحساب ==== */}
+          <Link
+            href={isLoggedIn ? "/account" : "/account/login"}
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-[#F4A6C1] text-white transition hover:bg-[#e392b0]"
+            aria-label="حسابي"
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          </Link>
         </div>
 
-        {/* وسط: اللوغو + اسم المتجر */}
         <Link href="/" className="flex flex-col items-center gap-1">
           {logo ? (
             <Image
@@ -82,7 +98,6 @@ export function Header({ logo, storeName }: { logo?: string | null; storeName: s
           </span>
         </Link>
 
-        {/* يمين: تبديل اللغة */}
         <button
           type="button"
           onClick={toggleLocale}
@@ -92,7 +107,6 @@ export function Header({ logo, storeName }: { logo?: string | null; storeName: s
         </button>
       </div>
 
-      {/* ==== إضافة جديدة: شريط البحث المنسدل ==== */}
       {searchOpen && (
         <div className="border-t border-[#f0e0d6]/60 bg-white px-4 py-3 sm:px-6">
           <form onSubmit={handleSearchSubmit} className="mx-auto flex max-w-7xl gap-2">
@@ -114,7 +128,6 @@ export function Header({ logo, storeName }: { logo?: string | null; storeName: s
         </div>
       )}
 
-      {/* شريط التنقل السفلي */}
       <nav className="border-t border-[#f0e0d6]/60">
         <div className="mx-auto flex max-w-7xl items-center justify-center gap-8 px-4 py-2 sm:px-6">
           <Link href="/" className="text-sm font-medium text-[#3E2723]/70 transition hover:text-[#E91E63]">
