@@ -1,75 +1,74 @@
-"use server";
+"use client";
 
-import { revalidatePath } from "next/cache";
-import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/auth";
-import { announcementBarSchema } from "@/lib/validations";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Card } from "@/components/ui/Card";
+import { createAnnouncement, updateAnnouncement } from "@/server/actions/admin-announcements";
+import type { AnnouncementBar } from "@prisma/client";
 
-async function guard() {
-  const session = await requireAdmin();
-  if (!session) throw new Error("غير مصرح");
-}
+export function AnnouncementForm({
+  announcement,
+  compact,
+}: {
+  announcement?: AnnouncementBar;
+  compact?: boolean;
+}) {
+  const router = useRouter();
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-export async function createAnnouncement(formData: FormData) {
-  await guard();
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    const formData = new FormData(e.currentTarget);
 
-  const raw = {
-    message: formData.get("message"),
-    active: formData.getAll("active").includes("true"),
-    sortOrder: formData.get("sortOrder") ?? 0,
+    const result = announcement
+      ? await updateAnnouncement(announcement.id, formData)
+      : await createAnnouncement(formData);
+
+    setLoading(false);
+    if (!result.success) {
+      setError(result.error ?? "حدث خطأ");
+      return;
+    }
+    router.refresh();
+    if (!announcement) (e.target as HTMLFormElement).reset();
   };
 
-  const parsed = announcementBarSchema.safeParse(raw);
-  if (!parsed.success) {
-    return { success: false, error: "الرسالة غير صالحة" };
-  }
+  const form = (
+    <form onSubmit={handleSubmit} className="space-y-3">
+      <Input name="message" label="نص الرسالة" defaultValue={announcement?.message} required />
+      <Input
+        name="sortOrder"
+        type="number"
+        label="الترتيب"
+        defaultValue={announcement?.sortOrder ?? 0}
+      />
+      <label className="flex items-center gap-2 text-sm">
+        <input type="hidden" name="active" value="false" />
+        <input
+          type="checkbox"
+          name="active"
+          value="true"
+          defaultChecked={announcement?.active ?? true}
+        />
+        نشطة (تظهر بالموقع)
+      </label>
+      {error && <p className="text-red-500 text-xs">{error}</p>}
+      <Button
+        type="submit"
+        variant={compact ? "outline" : "accent"}
+        size="sm"
+        loading={loading}
+      >
+        {announcement ? "تحديث" : "إضافة"}
+      </Button>
+    </form>
+  );
 
-  await prisma.announcementBar.create({ data: { ...parsed.data, id: crypto.randomUUID() } });
-  revalidatePath("/");
-  revalidatePath("/admin/announcements");
-  return { success: true, error: undefined as string | undefined };
-}
-
-export async function updateAnnouncement(id: string, formData: FormData) {
-  await guard();
-
-  const raw = {
-    message: formData.get("message"),
-    active: formData.getAll("active").includes("true"),
-    sortOrder: formData.get("sortOrder") ?? 0,
-  };
-
-  const parsed = announcementBarSchema.safeParse(raw);
-  if (!parsed.success) {
-    return { success: false, error: "الرسالة غير صالحة" };
-  }
-
-  await prisma.announcementBar.update({ where: { id }, data: parsed.data });
-  revalidatePath("/");
-  revalidatePath("/admin/announcements");
-  return { success: true, error: undefined as string | undefined };
-}
-
-export async function updateAnnouncementMode(scrolling: boolean) {
-  await guard();
-  await prisma.settings.upsert({
-    where: { id: "default" },
-    update: { announcementScrolling: scrolling },
-    create: { id: "default", announcementScrolling: scrolling },
-  });
-  revalidatePath("/");
-  revalidatePath("/admin/announcements");
-  return { success: true };
-}
-
-export async function deleteAnnouncement(id: string) {
-  await guard();
-  try {
-    await prisma.announcementBar.delete({ where: { id } });
-  } catch {
-    return { success: false, error: "تعذّر الحذف" };
-  }
-  revalidatePath("/");
-  revalidatePath("/admin/announcements");
-  return { success: true, error: undefined as string | undefined };
+  if (compact) return form;
+  return <Card>{form}</Card>;
 }
