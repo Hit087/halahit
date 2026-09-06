@@ -6,6 +6,8 @@ import { buildWhatsAppMessage, getWhatsAppUrl } from "@/lib/whatsapp";
 import { generateOrderNumber } from "@/lib/utils";
 import { checkoutSchema } from "@/lib/validations";
 import { trackEvent } from "@/server/analytics";
+import { getSession } from "@/lib/auth";
+import { sendOrderConfirmationEmail } from "@/lib/email";
 
 const VAT_RATE = 0.15;
 
@@ -18,6 +20,7 @@ export async function processCheckout(data: unknown) {
   const {
     customerName,
     customerPhone,
+    customerEmail,
     couponCode,
     fulfillmentMethodId,
     paymentMethodId,
@@ -25,7 +28,6 @@ export async function processCheckout(data: unknown) {
     items,
   } = parsed.data;
 
-  // ==== التحقق من طريقة الاستلام/التوصيل ====
   const fulfillmentMethod = await prisma.fulfillmentMethod.findFirst({
     where: { id: fulfillmentMethodId, active: true },
   });
@@ -39,7 +41,6 @@ export async function processCheckout(data: unknown) {
     };
   }
 
-  // ==== التحقق من طريقة الدفع ====
   const paymentMethod = await prisma.paymentMethod.findFirst({
     where: { id: paymentMethodId, active: true },
   });
@@ -63,7 +64,6 @@ export async function processCheckout(data: unknown) {
     return { success: false as const, error: "بعض المنتجات غير متوفرة" };
   }
 
-  // ==== إضافة جديدة: التحقق من كفاية الكمية المتوفرة ====
   for (const item of items) {
     const product = products.find((p) => p.id === item.productId)!;
     if (product.stock !== null && product.stock < item.quantity) {
@@ -141,7 +141,11 @@ export async function processCheckout(data: unknown) {
     locationLink,
   });
 
-  // ==== إضافة جديدة: خصم الكمية المتوفرة (فقط للمنتجات المتتبَّعة) + إنشاء الطلب بعملية واحدة ====
+  // ==== إضافة جديدة: ربط الطلب بحساب العميل تلقائيًا لو مسجّل دخول ====
+  const session = await getSession();
+  const customerId = session?.user?.id ?? null;
+  const finalEmail = customerEmail || session?.user?.email || undefined;
+
   const stockUpdates = products
     .filter((p) => p.stock !== null)
     .map((p) => {
@@ -159,6 +163,8 @@ export async function processCheckout(data: unknown) {
         orderNumber,
         customerName,
         customerPhone,
+        customerEmail: finalEmail,
+        customerId,
         subtotal,
         discount,
         total,
@@ -181,9 +187,20 @@ export async function processCheckout(data: unknown) {
     }),
   ]);
 
-  const order = results[results.length - 1] as { id: string };
+  const order = results[results.length - 1] as {
+    id: string;
+    trackingToken: string;
+  };
 
   await trackEvent("ORDER", "/checkout", undefined, { orderId: order.id });
+
+  if (finalEmail) {
+    await sendOrderConfirmationEmail(finalEmail, {
+      orderNumber,
+      total,
+      trackingToken: order.trackingToken,
+    });
+  }
 
   const whatsappUrl = getWhatsAppUrl(
     settings?.whatsappNumber ?? "966500000000",
