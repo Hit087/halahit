@@ -18,3 +18,12 @@ export async function requireAdmin() {
   }
   return session;
 }
+
+// ==== إضافة جديدة: التحقق من دخول عميل (أي حساب مسجّل، مو بالضرورة الأدمن) ====
+export async function requireCustomer() {
+  const session = await getSession();
+  if (!session?.user?.email) {
+    return null;
+  }
+  return session;
+}
