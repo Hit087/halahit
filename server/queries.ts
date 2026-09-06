@@ -55,6 +55,7 @@ type ProductRecord = {
   active: boolean;
   featured: boolean;
   categoryId: string;
+  stock?: number | null;
   category?: { name: string; nameEn: string; slug: string } | null;
   images: { id: string; url: string; sortOrder: number }[];
 };
@@ -70,6 +71,7 @@ function mapProduct(p: ProductRecord): ProductWithImages {
     active: p.active,
     featured: p.featured,
     categoryId: p.categoryId,
+    stock: p.stock ?? null,
     category: p.category
       ? { name: p.category.name, nameEn: p.category.nameEn, slug: p.category.slug }
       : undefined,
@@ -123,20 +125,54 @@ export async function getCategoriesWithProducts() {
 export async function getProducts(filters?: {
   categorySlug?: string;
   search?: string;
+  sort?: "newest" | "bestselling";
 }) {
+  const whereClause = {
+    active: true,
+    ...(filters?.categorySlug && {
+      category: { slug: filters.categorySlug },
+    }),
+    ...(filters?.search && {
+      OR: [
+        { name: { contains: filters.search, mode: "insensitive" as const } },
+        { nameEn: { contains: filters.search, mode: "insensitive" as const } },
+      ],
+    }),
+  };
+
+  // ==== إضافة جديدة: فرز حسب الأكثر مبيعًا ====
+  if (filters?.sort === "bestselling") {
+    const topSold = await prisma.orderItem.groupBy({
+      by: ["productId"],
+      _sum: { quantity: true },
+      orderBy: { _sum: { quantity: "desc" } },
+    });
+    const orderedIds = topSold.map((t) => t.productId);
+
+    if (orderedIds.length === 0) {
+      // ما فيه مبيعات بعد — نرجع بالترتيب الافتراضي
+      const products = await prisma.product.findMany({
+        where: whereClause,
+        include: { images: { orderBy: { sortOrder: "asc" } }, category: true },
+        orderBy: { createdAt: "desc" },
+      });
+      return products.map(mapProduct);
+    }
+
+    const products = await prisma.product.findMany({
+      where: { ...whereClause, id: { in: orderedIds } },
+      include: { images: { orderBy: { sortOrder: "asc" } }, category: true },
+    });
+    const productMap = new Map(products.map((p) => [p.id, p]));
+    return orderedIds
+      .map((id) => productMap.get(id))
+      .filter((p): p is NonNullable<typeof p> => Boolean(p))
+      .map(mapProduct);
+  }
+
+  // ==== الافتراضي: الأحدث أولاً ====
   const products = await prisma.product.findMany({
-    where: {
-      active: true,
-      ...(filters?.categorySlug && {
-        category: { slug: filters.categorySlug },
-      }),
-      ...(filters?.search && {
-        OR: [
-          { name: { contains: filters.search, mode: "insensitive" } },
-          { nameEn: { contains: filters.search, mode: "insensitive" } },
-        ],
-      }),
-    },
+    where: whereClause,
     include: {
       images: { orderBy: { sortOrder: "asc" } },
       category: true,
