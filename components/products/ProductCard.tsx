@@ -14,8 +14,12 @@ export function ProductCard({ product }: { product: ProductWithImages }) {
   const addItem = useCartStore((s) => s.addItem);
   const image = product.images[0]?.url ?? "/uploads/placeholder.svg";
 
+  // ==== إضافة جديدة: نفدت الكمية فقط إذا كان المخزون متتبَّعًا (رقم) وصفر أو أقل ====
+  const isOutOfStock = product.stock !== null && product.stock <= 0;
+
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault();
+    if (isOutOfStock) return;
     addItem({
       productId: product.id,
       name: product.name,
@@ -39,9 +43,16 @@ export function ProductCard({ product }: { product: ProductWithImages }) {
             src={image}
             alt={product.name}
             fill
-            className="object-cover transition duration-500 group-hover:scale-105"
+            className={`object-cover transition duration-500 group-hover:scale-105 ${
+              isOutOfStock ? "opacity-50 grayscale" : ""
+            }`}
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           />
+          {isOutOfStock && (
+            <span className="absolute top-2 right-2 rounded-full bg-[#3E2723] px-3 py-1 text-xs font-bold text-white">
+              {locale === "ar" ? "نفذت الكمية" : "Out of stock"}
+            </span>
+          )}
         </div>
       </Link>
 
@@ -58,7 +69,14 @@ export function ProductCard({ product }: { product: ProductWithImages }) {
             : locale === "ar" ? "السعر حسب الطلب" : "Price on request"}
         </p>
 
-        {product.price ? (
+        {isOutOfStock ? (
+          <button
+            disabled
+            className="mt-3 w-full cursor-not-allowed rounded-full bg-gray-300 py-2.5 text-sm font-semibold text-gray-500"
+          >
+            {locale === "ar" ? "نفذت الكمية" : "Out of stock"}
+          </button>
+        ) : product.price ? (
           <button
             onClick={handleAdd}
             className="mt-3 w-full rounded-full bg-[#F4A6C1] py-2.5 text-sm font-semibold text-white transition hover:bg-[#e392b0] active:scale-95"
