@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { useLocaleStore } from "@/store/locale-store";
 import { t } from "@/lib/i18n";
+import { subscribeNewsletter } from "@/server/actions/newsletter";
 
 type FooterProps = {
   storeName: string;
@@ -16,6 +18,9 @@ type FooterProps = {
   kitalink?: string | null;
   theChefzLink?: string | null;
   pages?: { slug: string; title: string }[];
+  commercialRegNumber?: string | null;
+  commercialLicenseNumber?: string | null;
+  commercialRegVisible?: boolean;
 };
 
 export function Footer({
@@ -31,8 +36,12 @@ export function Footer({
   kitalink,
   theChefzLink,
   pages = [],
+  commercialRegNumber,
+  commercialLicenseNumber,
+  commercialRegVisible,
 }: FooterProps) {
   const locale = useLocaleStore((s) => s.locale);
+  const [newsletterStatus, setNewsletterStatus] = useState<"idle" | "loading" | "done">("idle");
 
   const deliveryLinks = [
     { href: jahezLink, label: "Jahez" },
@@ -48,6 +57,14 @@ export function Footer({
     { href: tiktokLink, label: "TikTok" },
   ].filter((l) => l.href);
 
+  const handleNewsletterSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setNewsletterStatus("loading");
+    await subscribeNewsletter(new FormData(e.currentTarget));
+    setNewsletterStatus("done");
+    (e.target as HTMLFormElement).reset();
+  };
+
   return (
     <footer className="mt-auto border-t border-beige bg-text text-cream">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
@@ -55,6 +72,31 @@ export function Footer({
           <div>
             <h3 className="font-display text-2xl font-semibold">{storeName}</h3>
             <p className="mt-2 text-cream/80">{tagline}</p>
+
+            {/* ==== إضافة جديدة: النشرة البريدية ==== */}
+            <div className="mt-5">
+              <p className="mb-2 text-sm font-medium">اشترك في نشرتنا البريدية</p>
+              {newsletterStatus === "done" ? (
+                <p className="text-sm text-primary">تم الاشتراك بنجاح 🎉</p>
+              ) : (
+                <form onSubmit={handleNewsletterSubmit} className="flex gap-2">
+                  <input
+                    type="email"
+                    name="email"
+                    required
+                    placeholder="بريدك الإلكتروني"
+                    className="min-w-0 flex-1 rounded-full bg-cream/10 px-4 py-2 text-sm text-white placeholder:text-cream/50 outline-none"
+                  />
+                  <button
+                    type="submit"
+                    disabled={newsletterStatus === "loading"}
+                    className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-text"
+                  >
+                    اشتراك
+                  </button>
+                </form>
+              )}
+            </div>
           </div>
 
           <div>
@@ -117,7 +159,6 @@ export function Footer({
           </div>
         </div>
 
-        {/* ==== إضافة جديدة: روابط الصفحات (شروط، خصوصية، إلخ) ==== */}
         {pages.length > 0 && (
           <div className="mt-8 flex flex-wrap justify-center gap-x-6 gap-y-2 border-t border-cream/20 pt-6 text-sm">
             {pages.map((p) => (
@@ -129,6 +170,14 @@ export function Footer({
                 {p.title}
               </a>
             ))}
+          </div>
+        )}
+
+        {/* ==== إضافة جديدة: السجل التجاري والرخصة ==== */}
+        {commercialRegVisible && (commercialRegNumber || commercialLicenseNumber) && (
+          <div className="mt-4 flex flex-wrap justify-center gap-x-6 gap-y-1 text-xs text-cream/50">
+            {commercialRegNumber && <span>س.ت: {commercialRegNumber}</span>}
+            {commercialLicenseNumber && <span>رخصة: {commercialLicenseNumber}</span>}
           </div>
         )}
 
