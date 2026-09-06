@@ -13,29 +13,32 @@ import Link from "next/link";
 type FulfillmentMethod = {
   id: string;
   name: string;
-  type: string; // "PICKUP" | "DELIVERY"
+  type: string;
   price: number;
 };
 
 type PaymentMethod = {
   id: string;
   name: string;
-  type: string; // "CASH" | "GATEWAY"
+  type: string;
 };
 
 export function CheckoutPageClient({
   fulfillmentMethods,
   paymentMethods,
   vatEnabled = true,
+  defaultEmail = "",
 }: {
   fulfillmentMethods: FulfillmentMethod[];
   paymentMethods: PaymentMethod[];
   vatEnabled?: boolean;
+  defaultEmail?: string;
 }) {
   const locale = useLocaleStore((s) => s.locale);
   const { items, coupon, getSubtotal, getVat, getTotal, clearCart } = useCartStore();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState(defaultEmail);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -56,8 +59,6 @@ export function CheckoutPageClient({
 
   const subtotal = getSubtotal();
   const discount = coupon?.discount ?? 0;
-  // ==== الأسعار شاملة الضريبة أصلًا: getVat() تستخرجها للعرض فقط،
-  // getTotal() لا يضيفها فوق (هي أصلًا محسوبة بالسعر) ====
   const vat = vatEnabled ? getVat() : 0;
   const netInclusive = getTotal();
   const total = netInclusive + (isDelivery ? fulfillmentPrice : 0);
@@ -106,6 +107,7 @@ export function CheckoutPageClient({
     const result = await processCheckout({
       customerName: name,
       customerPhone: phone,
+      customerEmail: email || undefined,
       couponCode: coupon?.code,
       fulfillmentMethodId,
       paymentMethodId,
@@ -152,8 +154,15 @@ export function CheckoutPageClient({
           required
           placeholder="05xxxxxxxx"
         />
+        {/* ==== إضافة جديدة: بريد اختياري لإرسال تأكيد وتحديثات الطلب ==== */}
+        <Input
+          id="email"
+          label="البريد الإلكتروني (اختياري - لإرسال تأكيد الطلب)"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
 
-        {/* ==== طريقة الاستلام والتوصيل ==== */}
         {fulfillmentMethods.length > 0 && (
           <div>
             <p className="mb-2 text-sm font-medium text-text/80">طريقة الاستلام</p>
@@ -182,7 +191,6 @@ export function CheckoutPageClient({
           </div>
         )}
 
-        {/* ==== حقول التوصيل: تظهر فقط لو الطريقة المختارة توصيل ==== */}
         {isDelivery && (
           <div>
             <p className="mb-2 text-sm font-medium text-text/80">موقع التوصيل</p>
@@ -204,7 +212,6 @@ export function CheckoutPageClient({
           </div>
         )}
 
-        {/* ==== طريقة الدفع ==== */}
         {paymentMethods.length > 0 && (
           <div>
             <p className="mb-2 text-sm font-medium text-text/80">طريقة الدفع</p>
