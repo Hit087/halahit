@@ -46,6 +46,9 @@ model Product {
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
+  // ==== إضافة جديدة: الكمية المتوفرة (فارغة = غير متتبَّعة/غير محدودة) ====
+  stock Int?
+
   @@index([categoryId])
   @@index([active, featured])
 }
@@ -103,7 +106,6 @@ model Order {
   paymentMethod     String?
   locationLink      String?
 
-  // ==== إضافة جديدة: مبلغ الضريبة ====
   vatAmount Decimal? @db.Decimal(10, 2)
 }
 
@@ -144,7 +146,6 @@ model Settings {
   commercialLicenseNumber  String?
   commercialRegVisible     Boolean @default(false)
 
-  // ==== إضافة جديدة: تفعيل عرض الضريبة ====
   vatEnabled Boolean @default(true)
 }
 
@@ -190,7 +191,6 @@ model AnnouncementBar {
   updatedAt DateTime @updatedAt
 }
 
-// ==================== جدول جديد: صفحات محتوى حرة (قانونية وغيرها) ====================
 model Page {
   id        String   @id @default(cuid())
   slug      String   @unique
