@@ -75,6 +75,48 @@ export function SettingsForm({ settings }: { settings: Settings | null }) {
           defaultValue={settings?.theChefzLink ?? ""}
         />
 
+        {/* ==== إضافة جديدة: الضريبة ==== */}
+        <div className="border-t border-beige pt-4 mt-6">
+          <h3 className="font-semibold mb-3">الضريبة</h3>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="hidden" name="vatEnabled" value="false" />
+            <input
+              type="checkbox"
+              name="vatEnabled"
+              value="true"
+              defaultChecked={settings?.vatEnabled ?? true}
+            />
+            عرض ضريبة القيمة المضافة (15%) كسطر توضيحي بالسلة وصفحة الدفع
+          </label>
+        </div>
+
+        {/* ==== إضافة جديدة: السجل التجاري والرخصة ==== */}
+        <div className="border-t border-beige pt-4 mt-6">
+          <h3 className="font-semibold mb-3">السجل التجاري والرخصة</h3>
+          <div className="space-y-4">
+            <Input
+              name="commercialRegNumber"
+              label="رقم السجل التجاري"
+              defaultValue={settings?.commercialRegNumber ?? ""}
+            />
+            <Input
+              name="commercialLicenseNumber"
+              label="رقم الرخصة"
+              defaultValue={settings?.commercialLicenseNumber ?? ""}
+            />
+            <label className="flex items-center gap-2 text-sm">
+              <input type="hidden" name="commercialRegVisible" value="false" />
+              <input
+                type="checkbox"
+                name="commercialRegVisible"
+                value="true"
+                defaultChecked={settings?.commercialRegVisible ?? false}
+              />
+              إظهار السجل التجاري والرخصة بتذييل الموقع
+            </label>
+          </div>
+        </div>
+
         <div className="border-t border-beige pt-4 mt-6">
           <h3 className="font-semibold mb-3">تغيير كلمة المرور</h3>
           <p className="text-sm text-text/60 mb-3">اترك الحقول فارغة إذا لم تريد تغيير كلمة المرور</p>
