@@ -23,16 +23,18 @@ export function AnnouncementBarDisplay({
 
   return (
     <div className="overflow-hidden bg-[#E91E63] py-2 text-white">
-      <div className="flex w-max animate-[marquee_18s_linear_infinite] whitespace-nowrap text-sm font-medium">
-        <span className="px-6">{combinedText}</span>
-        <span className="px-6" aria-hidden="true">{combinedText}</span>
-      </div>
       <style>{`
-        @keyframes marquee {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
+        @keyframes hit-marquee-single {
+          0% { transform: translateX(100%); }
+          100% { transform: translateX(-100%); }
         }
       `}</style>
+      <div
+        className="whitespace-nowrap text-sm font-medium"
+        style={{ animation: "hit-marquee-single 14s linear infinite" }}
+      >
+        {combinedText}
+      </div>
     </div>
   );
 }
