@@ -1,74 +1,90 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import Image from "next/image";
-import { Badge } from "@/components/ui/Badge";
-import { FooterItemForm } from "./FooterItemForm";
-import { DeleteFooterItemButton } from "./DeleteFooterItemButton";
+import { requireAdmin } from "@/lib/auth";
+import { footerItemSchema } from "@/lib/validations";
+import { saveUploadedFile } from "@/server/upload";
 
-const sections: { key: string; title: string; hint: string }[] = [
-  { key: "SOCIAL", title: "التواصل الاجتماعي", hint: "أيقونات فيسبوك، سناب، انستقرام..." },
-  { key: "CONTACT", title: "معلومات التواصل", hint: "واتساب، جوال، إيميل، موقع" },
-  { key: "TRUST", title: "شعارات الثقة", hint: "منصة الأعمال، السجل التجاري، الرقم الضريبي" },
-  { key: "PAYMENT", title: "طرق الدفع المقبولة", hint: "فيزا، مدى، آبل باي، تابي..." },
-  { key: "DELIVERY", title: "تطبيقات التوصيل", hint: "جاهز، هنقرستيشن، ToYou..." },
-];
+async function guard() {
+  const session = await requireAdmin();
+  if (!session) throw new Error("غير مصرح");
+}
 
-export default async function AdminFooterPage() {
-  const items = await prisma.footerItem.findMany({ orderBy: { sortOrder: "asc" } });
+export async function createFooterItem(formData: FormData) {
+  await guard();
 
-  return (
-    <div>
-      <h1 className="font-display text-3xl font-bold mb-2">الفوتر</h1>
-      <p className="mb-8 text-sm text-text/60">
-        أضف أي عنصر (صورة + نص + رابط) لكل قسم، ورتّبها كما تحب.
-      </p>
+  const raw = {
+    section: formData.get("section"),
+    label: formData.get("label") || undefined,
+    link: formData.get("link") || undefined,
+    active: formData.getAll("active").includes("true"),
+    sortOrder: formData.get("sortOrder") ?? 0,
+  };
 
-      <div className="space-y-12">
-        {sections.map((sec) => {
-          const sectionItems = items.filter((i) => i.section === sec.key);
-          return (
-            <div key={sec.key}>
-              <h2 className="text-lg font-semibold">{sec.title}</h2>
-              <p className="mb-4 text-xs text-text/50">{sec.hint}</p>
+  const parsed = footerItemSchema.safeParse(raw);
+  if (!parsed.success) {
+    return { success: false, error: "بيانات غير صالحة" };
+  }
 
-              <div className="grid gap-8 lg:grid-cols-2">
-                <div>
-                  <p className="mb-2 text-sm font-medium">إضافة عنصر جديد</p>
-                  <div className="rounded-luxury-lg bg-white p-4 shadow-soft">
-                    <FooterItemForm section={sec.key} />
-                  </div>
-                </div>
+  const file = formData.get("image");
+  if (!(file instanceof File) || file.size === 0) {
+    return { success: false, error: "الرجاء رفع صورة" };
+  }
+  const image = await saveUploadedFile(file);
 
-                <div className="space-y-3">
-                  {sectionItems.map((item) => (
-                    <div key={item.id} className="rounded-luxury-lg bg-white p-4 shadow-soft">
-                      <div className="flex items-center gap-3">
-                        <div className="relative h-10 w-10 flex-shrink-0 rounded overflow-hidden bg-cream">
-                          <Image src={item.image} alt="" fill className="object-contain" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <p className="text-sm font-medium">{item.label || "بدون نص"}</p>
-                            <Badge variant={item.active ? "success" : "muted"}>
-                              {item.active ? "نشط" : "معطّل"}
-                            </Badge>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="mt-2">
-                        <FooterItemForm section={sec.key} item={item} compact />
-                        <DeleteFooterItemButton id={item.id} />
-                      </div>
-                    </div>
-                  ))}
-                  {sectionItems.length === 0 && (
-                    <p className="py-6 text-center text-sm text-text/40">لا توجد عناصر بعد</p>
-                  )}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
+  await prisma.footerItem.create({
+    data: { ...parsed.data, image, id: crypto.randomUUID() },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/admin/footer");
+  return { success: true, error: undefined as string | undefined };
+}
+
+export async function updateFooterItem(id: string, formData: FormData) {
+  await guard();
+
+  const existing = await prisma.footerItem.findUnique({ where: { id } });
+  if (!existing) return { success: false, error: "العنصر غير موجود" };
+
+  const raw = {
+    section: formData.get("section"),
+    label: formData.get("label") || undefined,
+    link: formData.get("link") || undefined,
+    active: formData.getAll("active").includes("true"),
+    sortOrder: formData.get("sortOrder") ?? 0,
+  };
+
+  const parsed = footerItemSchema.safeParse(raw);
+  if (!parsed.success) {
+    return { success: false, error: "بيانات غير صالحة" };
+  }
+
+  const file = formData.get("image");
+  let image = existing.image;
+  if (file instanceof File && file.size > 0) {
+    image = await saveUploadedFile(file);
+  }
+
+  await prisma.footerItem.update({
+    where: { id },
+    data: { ...parsed.data, image },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/admin/footer");
+  return { success: true, error: undefined as string | undefined };
+}
+
+export async function deleteFooterItem(id: string) {
+  await guard();
+  try {
+    await prisma.footerItem.delete({ where: { id } });
+  } catch {
+    return { success: false, error: "تعذّر الحذف" };
+  }
+  revalidatePath("/");
+  revalidatePath("/admin/footer");
+  return { success: true, error: undefined as string | undefined };
 }
