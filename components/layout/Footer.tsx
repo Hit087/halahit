@@ -1,61 +1,55 @@
 "use client";
 
 import { useState } from "react";
-import { useLocaleStore } from "@/store/locale-store";
-import { t } from "@/lib/i18n";
+import Image from "next/image";
 import { subscribeNewsletter } from "@/server/actions/newsletter";
+
+type FooterItem = {
+  id: string;
+  section: string;
+  label: string | null;
+  image: string;
+  link: string | null;
+};
 
 type FooterProps = {
   storeName: string;
   tagline: string;
-  mapLink?: string | null;
-  jahezLink?: string | null;
-  hungerStationLink?: string | null;
-  toYouLink?: string | null;
-  instagramLink?: string | null;
-  snapchatLink?: string | null;
-  tiktokLink?: string | null;
-  kitalink?: string | null;
-  theChefzLink?: string | null;
   pages?: { slug: string; title: string }[];
-  commercialRegNumber?: string | null;
-  commercialLicenseNumber?: string | null;
-  commercialRegVisible?: boolean;
+  footerItems?: FooterItem[];
 };
+
+function ItemLink({ item, className }: { item: FooterItem; className?: string }) {
+  const content = (
+    <div className={className}>
+      <div className="relative h-full w-full">
+        <Image src={item.image} alt={item.label ?? ""} fill className="object-contain" />
+      </div>
+    </div>
+  );
+  if (!item.link) return content;
+  return (
+    <a href={item.link} target="_blank" rel="noopener noreferrer">
+      {content}
+    </a>
+  );
+}
 
 export function Footer({
   storeName,
   tagline,
-  mapLink,
-  jahezLink,
-  hungerStationLink,
-  toYouLink,
-  instagramLink,
-  snapchatLink,
-  tiktokLink,
-  kitalink,
-  theChefzLink,
   pages = [],
-  commercialRegNumber,
-  commercialLicenseNumber,
-  commercialRegVisible,
+  footerItems = [],
 }: FooterProps) {
-  const locale = useLocaleStore((s) => s.locale);
   const [newsletterStatus, setNewsletterStatus] = useState<"idle" | "loading" | "done">("idle");
 
-  const deliveryLinks = [
-    { href: jahezLink, label: "Jahez" },
-    { href: hungerStationLink, label: "HungerStation" },
-    { href: toYouLink, label: "ToYou" },
-    { href: kitalink, label: "Kita" },
-    { href: theChefzLink, label: "TheChefz" },
-  ].filter((l) => l.href);
+  const bySection = (section: string) => footerItems.filter((i) => i.section === section);
 
-  const socialLinks = [
-    { href: instagramLink, label: "Instagram" },
-    { href: snapchatLink, label: "Snapchat" },
-    { href: tiktokLink, label: "TikTok" },
-  ].filter((l) => l.href);
+  const social = bySection("SOCIAL");
+  const contact = bySection("CONTACT");
+  const trust = bySection("TRUST");
+  const payment = bySection("PAYMENT");
+  const delivery = bySection("DELIVERY");
 
   const handleNewsletterSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -68,12 +62,25 @@ export function Footer({
   return (
     <footer className="mt-auto border-t border-beige bg-text text-cream">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
+
+        {/* ==== التواصل الاجتماعي ==== */}
+        {social.length > 0 && (
+          <div className="mb-8 flex justify-center gap-4">
+            {social.map((item) => (
+              <ItemLink
+                key={item.id}
+                item={item}
+                className="h-10 w-10 rounded-full bg-white p-2 transition hover:scale-110"
+              />
+            ))}
+          </div>
+        )}
+
         <div className="grid gap-8 md:grid-cols-3">
           <div>
             <h3 className="font-display text-2xl font-semibold">{storeName}</h3>
             <p className="mt-2 text-cream/80">{tagline}</p>
 
-            {/* ==== إضافة جديدة: النشرة البريدية ==== */}
             <div className="mt-5">
               <p className="mb-2 text-sm font-medium">اشترك في نشرتنا البريدية</p>
               {newsletterStatus === "done" ? (
@@ -99,64 +106,42 @@ export function Footer({
             </div>
           </div>
 
-          <div>
-            <h4 className="mb-4 font-semibold">{t("deliveryApps", locale)}</h4>
-            <div className="flex flex-wrap gap-3">
-              {deliveryLinks.map((link) => (
-                <a
-                  key={link.label}
-                  href={link.href!}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-luxury bg-cream/10 px-4 py-2 text-sm transition hover:bg-primary hover:text-white"
-                >
-                  {link.label}
-                </a>
-              ))}
-              {deliveryLinks.length === 0 && (
-                <p className="text-sm text-cream/60">-</p>
-              )}
-            </div>
-          </div>
-
-          <div>
-            <h4 className="mb-4 font-semibold">{t("location", locale)}</h4>
-            {mapLink ? (
-              <a
-                href={mapLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-primary transition hover:underline"
-              >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                Google Maps
-              </a>
-            ) : (
-              <p className="text-sm text-cream/60">-</p>
-            )}
-
-            {socialLinks.length > 0 && (
-              <div className="mt-4">
-                <h4 className="mb-3 font-semibold">تابعونا</h4>
-                <div className="flex flex-wrap gap-3">
-                  {socialLinks.map((link) => (
-                    <a
-                      key={link.label}
-                      href={link.href!}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="rounded-luxury bg-cream/10 px-4 py-2 text-sm transition hover:bg-primary hover:text-white"
-                    >
-                      {link.label}
-                    </a>
-                  ))}
-                </div>
+          {/* ==== تطبيقات التوصيل ==== */}
+          {delivery.length > 0 && (
+            <div>
+              <h4 className="mb-4 font-semibold">تطبيقات التوصيل</h4>
+              <div className="flex flex-wrap gap-3">
+                {delivery.map((item) => (
+                  <ItemLink
+                    key={item.id}
+                    item={item}
+                    className="h-10 w-20 rounded-luxury bg-white/95 p-1.5"
+                  />
+                ))}
               </div>
-            )}
-          </div>
+            </div>
+          )}
+
+          {/* ==== معلومات التواصل ==== */}
+          {contact.length > 0 && (
+            <div>
+              <h4 className="mb-4 font-semibold">تواصل معنا</h4>
+              <div className="space-y-3">
+                {contact.map((item) => (
+                  <div key={item.id} className="flex items-center gap-3">
+                    <ItemLink item={item} className="h-6 w-6 flex-shrink-0" />
+                    {item.link ? (
+                      <a href={item.link} className="text-sm text-cream/80 hover:text-primary">
+                        {item.label}
+                      </a>
+                    ) : (
+                      <span className="text-sm text-cream/80">{item.label}</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {pages.length > 0 && (
@@ -173,17 +158,34 @@ export function Footer({
           </div>
         )}
 
-        {/* ==== إضافة جديدة: السجل التجاري والرخصة ==== */}
-        {commercialRegVisible && (commercialRegNumber || commercialLicenseNumber) && (
-          <div className="mt-4 flex flex-wrap justify-center gap-x-6 gap-y-1 text-xs text-cream/50">
-            {commercialRegNumber && <span>س.ت: {commercialRegNumber}</span>}
-            {commercialLicenseNumber && <span>رخصة: {commercialLicenseNumber}</span>}
+        {/* ==== شعارات الثقة ==== */}
+        {trust.length > 0 && (
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-6 border-t border-cream/20 pt-6">
+            {trust.map((item) => (
+              <div key={item.id} className="flex items-center gap-2">
+                <ItemLink item={item} className="h-10 w-10" />
+                {item.label && <span className="text-xs text-cream/70">{item.label}</span>}
+              </div>
+            ))}
           </div>
         )}
 
-        <div className="mt-6 border-t border-cream/20 pt-6 text-center text-sm text-cream/60">
+        <div className="mt-6 text-center text-sm text-cream/60">
           © {new Date().getFullYear()} {storeName}. All rights reserved.
         </div>
+
+        {/* ==== طرق الدفع المقبولة ==== */}
+        {payment.length > 0 && (
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            {payment.map((item) => (
+              <ItemLink
+                key={item.id}
+                item={item}
+                className="h-8 w-14 rounded bg-white p-1"
+              />
+            ))}
+          </div>
+        )}
       </div>
     </footer>
   );
