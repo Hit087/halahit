@@ -155,3 +155,12 @@ export const announcementBarSchema = z.object({
 export const newsletterSchema = z.object({
   email: z.string().email(),
 });
+
+// ==================== إضافة جديدة: عناصر الفوتر المرنة ====================
+export const footerItemSchema = z.object({
+  section: z.enum(["SOCIAL", "CONTACT", "TRUST", "PAYMENT", "DELIVERY"]),
+  label: z.string().optional(),
+  link: z.string().optional(),
+  active: z.coerce.boolean(),
+  sortOrder: z.coerce.number().int().min(0),
+});
