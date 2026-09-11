@@ -10,7 +10,7 @@ export default async function ShopLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [settings, pages, announcements, session] = await Promise.all([
+  const [settings, pages, announcements, session, footerItems] = await Promise.all([
     getSettings(),
     prisma.page.findMany({
       where: { active: true },
@@ -23,6 +23,11 @@ export default async function ShopLayout({
       select: { id: true, message: true },
     }),
     getSession(),
+    prisma.footerItem.findMany({
+      where: { active: true },
+      orderBy: { sortOrder: "asc" },
+      select: { id: true, section: true, label: true, image: true, link: true },
+    }),
   ]);
 
   return (
@@ -40,19 +45,8 @@ export default async function ShopLayout({
       <Footer
         storeName={settings?.storeName ?? "Hit | هيت"}
         tagline={settings?.tagline ?? "أكل قطعة ذكرى"}
-        mapLink={settings?.mapLink}
-        jahezLink={settings?.jahezLink}
-        hungerStationLink={settings?.hungerStationLink}
-        toYouLink={settings?.toYouLink}
-        instagramLink={settings?.instagramLink}
-        snapchatLink={settings?.snapchatLink}
-        tiktokLink={settings?.tiktokLink}
-        kitalink={settings?.kitalink}
-        theChefzLink={settings?.theChefzLink}
         pages={pages}
-        commercialRegNumber={settings?.commercialRegNumber}
-        commercialLicenseNumber={settings?.commercialLicenseNumber}
-        commercialRegVisible={settings?.commercialRegVisible}
+        footerItems={footerItems}
       />
     </div>
   );
