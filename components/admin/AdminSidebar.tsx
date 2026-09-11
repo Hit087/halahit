@@ -16,6 +16,7 @@ const links = [
   { href: "/admin/pages", label: "الصفحات" },
   { href: "/admin/announcements", label: "شريط الإعلانات" },
   { href: "/admin/newsletter", label: "النشرة البريدية" },
+  { href: "/admin/footer", label: "الفوتر" },
   { href: "/admin/orders", label: "الطلبات" },
   { href: "/admin/settings", label: "الإعدادات" },
 ];
