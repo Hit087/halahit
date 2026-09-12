@@ -19,17 +19,15 @@ type FooterProps = {
   footerItems?: FooterItem[];
 };
 
-// ==== مقاس أيقونة موحّد يُطبّق على كل صورة بكل أقسام الفوتر ====
-const ICON_BOX = "relative h-14 w-14 flex-shrink-0 rounded-luxury bg-white p-1.5 shadow-sm";
-
+// ==== مقاس أيقونة موحّد: الصورة تملأ المربع بالكامل بدون أي فراغ ====
 function ItemIcon({ item }: { item: FooterItem }) {
   const content = (
-    <div className={ICON_BOX}>
+    <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-luxury bg-white shadow-sm">
       <Image
         src={item.image}
         alt={item.label ?? ""}
         fill
-        className="object-contain p-1"
+        className="object-cover"
       />
     </div>
   );
@@ -69,7 +67,6 @@ export function Footer({
     <footer className="mt-auto border-t border-beige bg-text text-cream">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
 
-        {/* ==== التواصل الاجتماعي ==== */}
         {social.length > 0 && (
           <div className="mb-8 flex flex-wrap justify-center gap-4">
             {social.map((item) => (
@@ -108,7 +105,6 @@ export function Footer({
             </div>
           </div>
 
-          {/* ==== تطبيقات التوصيل ==== */}
           {delivery.length > 0 && (
             <div>
               <h4 className="mb-4 font-semibold">تطبيقات التوصيل</h4>
@@ -120,7 +116,6 @@ export function Footer({
             </div>
           )}
 
-          {/* ==== معلومات التواصل ==== */}
           {contact.length > 0 && (
             <div>
               <h4 className="mb-4 font-semibold">تواصل معنا</h4>
@@ -152,7 +147,6 @@ export function Footer({
           </div>
         )}
 
-        {/* ==== شعارات الثقة ==== */}
         {trust.length > 0 && (
           <div className="mt-6 flex flex-wrap items-center justify-center gap-4 border-t border-cream/20 pt-6">
             {trust.map((item) => (
@@ -168,7 +162,6 @@ export function Footer({
           © {new Date().getFullYear()} {storeName}. All rights reserved.
         </div>
 
-        {/* ==== طرق الدفع المقبولة ==== */}
         {payment.length > 0 && (
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             {payment.map((item) => (
