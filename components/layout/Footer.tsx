@@ -19,17 +19,23 @@ type FooterProps = {
   footerItems?: FooterItem[];
 };
 
-function ItemLink({ item, className }: { item: FooterItem; className?: string }) {
+// ==== مقاس أيقونة موحّد يُطبّق على كل صورة بكل أقسام الفوتر ====
+const ICON_BOX = "relative h-14 w-14 flex-shrink-0 rounded-luxury bg-white p-1.5 shadow-sm";
+
+function ItemIcon({ item }: { item: FooterItem }) {
   const content = (
-    <div className={className}>
-      <div className="relative h-full w-full">
-        <Image src={item.image} alt={item.label ?? ""} fill className="object-contain" />
-      </div>
+    <div className={ICON_BOX}>
+      <Image
+        src={item.image}
+        alt={item.label ?? ""}
+        fill
+        className="object-contain p-1"
+      />
     </div>
   );
   if (!item.link) return content;
   return (
-    <a href={item.link} target="_blank" rel="noopener noreferrer">
+    <a href={item.link} target="_blank" rel="noopener noreferrer" className="transition hover:scale-105">
       {content}
     </a>
   );
@@ -65,13 +71,9 @@ export function Footer({
 
         {/* ==== التواصل الاجتماعي ==== */}
         {social.length > 0 && (
-          <div className="mb-8 flex justify-center gap-4">
+          <div className="mb-8 flex flex-wrap justify-center gap-4">
             {social.map((item) => (
-              <ItemLink
-                key={item.id}
-                item={item}
-                className="h-10 w-10 rounded-full bg-white p-2 transition hover:scale-110"
-              />
+              <ItemIcon key={item.id} item={item} />
             ))}
           </div>
         )}
@@ -112,11 +114,7 @@ export function Footer({
               <h4 className="mb-4 font-semibold">تطبيقات التوصيل</h4>
               <div className="flex flex-wrap gap-3">
                 {delivery.map((item) => (
-                  <ItemLink
-                    key={item.id}
-                    item={item}
-                    className="h-10 w-20 rounded-luxury bg-white/95 p-1.5"
-                  />
+                  <ItemIcon key={item.id} item={item} />
                 ))}
               </div>
             </div>
@@ -126,16 +124,12 @@ export function Footer({
           {contact.length > 0 && (
             <div>
               <h4 className="mb-4 font-semibold">تواصل معنا</h4>
-              <div className="space-y-3">
+              <div className="flex flex-wrap gap-3">
                 {contact.map((item) => (
-                  <div key={item.id} className="flex items-center gap-3">
-                    <ItemLink item={item} className="h-6 w-6 flex-shrink-0" />
-                    {item.link ? (
-                      <a href={item.link} className="text-sm text-cream/80 hover:text-primary">
-                        {item.label}
-                      </a>
-                    ) : (
-                      <span className="text-sm text-cream/80">{item.label}</span>
+                  <div key={item.id} className="flex flex-col items-center gap-1.5">
+                    <ItemIcon item={item} />
+                    {item.label && (
+                      <span className="text-xs text-cream/70">{item.label}</span>
                     )}
                   </div>
                 ))}
@@ -160,10 +154,10 @@ export function Footer({
 
         {/* ==== شعارات الثقة ==== */}
         {trust.length > 0 && (
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-6 border-t border-cream/20 pt-6">
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-4 border-t border-cream/20 pt-6">
             {trust.map((item) => (
-              <div key={item.id} className="flex items-center gap-2">
-                <ItemLink item={item} className="h-10 w-10" />
+              <div key={item.id} className="flex flex-col items-center gap-1.5">
+                <ItemIcon item={item} />
                 {item.label && <span className="text-xs text-cream/70">{item.label}</span>}
               </div>
             ))}
@@ -178,11 +172,7 @@ export function Footer({
         {payment.length > 0 && (
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             {payment.map((item) => (
-              <ItemLink
-                key={item.id}
-                item={item}
-                className="h-8 w-14 rounded bg-white p-1"
-              />
+              <ItemIcon key={item.id} item={item} />
             ))}
           </div>
         )}
