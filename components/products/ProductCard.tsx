@@ -118,13 +118,13 @@ export function ProductCard({
         ) : product.price ? (
           <button
             onClick={handleAdd}
-            className="mt-3 w-full rounded-full bg-primary py-2.5 text-sm font-semibold text-white transition hover:bg-primary-dark active:scale-95"
+            className="mt-3 w-full rounded-full bg-accent py-2.5 text-sm font-semibold text-white transition hover:bg-accent-dark active:scale-95"
           >
             {t("addToCart", locale)}
           </button>
         ) : (
           <Link href={`/products/${product.id}`}>
-            <button className="mt-3 w-full rounded-full border-2 border-primary py-2.5 text-sm font-semibold text-primary transition hover:bg-primary hover:text-white">
+            <button className="mt-3 w-full rounded-full border-2 border-accent py-2.5 text-sm font-semibold text-accent transition hover:bg-accent hover:text-white">
               {locale === "ar" ? "تواصل معنا" : "Contact us"}
             </button>
           </Link>
