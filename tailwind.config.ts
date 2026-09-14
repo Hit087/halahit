@@ -10,10 +10,16 @@ const config: Config = {
     extend: {
       colors: {
         primary: "#F4A6C1",
+        // ==== إضافة جديدة: نفس درجة الـhover اللي كانت مكتوبة يدويًا بعدة ملفات ====
+        "primary-dark": "#e392b0",
         accent: "#E91E63",
         cream: "#F8F1E7",
         beige: "#E8D8C3",
         text: "#3E2723",
+        // ==== إضافة جديدة: خلفية الصفحة الفاتحة (كانت بدون اسم) ====
+        canvas: "#FDF6F0",
+        // ==== إضافة جديدة: لون الحدود الفاتح (كان بدون اسم) ====
+        line: "#f0e0d6",
       },
       borderRadius: {
         luxury: "16px",
