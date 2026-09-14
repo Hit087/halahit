@@ -34,14 +34,14 @@ export function Header({
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-[#FDF6F0] border-b border-[#f0e0d6]/60 shadow-sm">
+    <header className="sticky top-0 z-50 bg-canvas border-b border-line/60 shadow-sm">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
 
         <div className="flex items-center gap-2">
           <Link
             href="/cart"
             className={cn(
-              "relative flex h-11 w-11 items-center justify-center rounded-full bg-[#F4A6C1] text-white transition hover:bg-[#e392b0]"
+              "relative flex h-11 w-11 items-center justify-center rounded-full bg-primary text-white transition hover:bg-primary-dark"
             )}
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -50,7 +50,7 @@ export function Header({
               />
             </svg>
             {itemCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#E91E63] text-xs text-white font-bold">
+              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-accent text-xs text-white font-bold">
                 {itemCount}
               </span>
             )}
@@ -59,7 +59,7 @@ export function Header({
           <button
             type="button"
             onClick={() => setSearchOpen((v) => !v)}
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-[#F4A6C1] text-white transition hover:bg-[#e392b0]"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-white transition hover:bg-primary-dark"
             aria-label="بحث"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -67,10 +67,9 @@ export function Header({
             </svg>
           </button>
 
-          {/* ==== إضافة جديدة: أيقونة الحساب ==== */}
           <Link
             href={isLoggedIn ? "/account" : "/account/login"}
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-[#F4A6C1] text-white transition hover:bg-[#e392b0]"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-white transition hover:bg-primary-dark"
             aria-label="حسابي"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -89,11 +88,11 @@ export function Header({
               className="h-11 w-11 rounded-full object-cover"
             />
           ) : (
-            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#F4A6C1] text-lg font-bold text-white">
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-lg font-bold text-white">
               ه
             </span>
           )}
-          <span className="font-display text-base font-semibold text-[#3E2723] leading-none">
+          <span className="font-display text-base font-semibold text-text leading-none">
             {storeName}
           </span>
         </Link>
@@ -101,14 +100,14 @@ export function Header({
         <button
           type="button"
           onClick={toggleLocale}
-          className="flex h-11 items-center justify-center rounded-full bg-[#F4A6C1] px-4 text-sm font-semibold text-white transition hover:bg-[#e392b0]"
+          className="flex h-11 items-center justify-center rounded-full bg-primary px-4 text-sm font-semibold text-white transition hover:bg-primary-dark"
         >
           {t("language", locale)}
         </button>
       </div>
 
       {searchOpen && (
-        <div className="border-t border-[#f0e0d6]/60 bg-white px-4 py-3 sm:px-6">
+        <div className="border-t border-line/60 bg-white px-4 py-3 sm:px-6">
           <form onSubmit={handleSearchSubmit} className="mx-auto flex max-w-7xl gap-2">
             <input
               type="text"
@@ -116,11 +115,11 @@ export function Header({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="ابحث عن منتج..."
-              className="flex-1 rounded-full border border-[#f0e0d6] px-4 py-2 text-sm outline-none focus:border-[#E91E63]"
+              className="flex-1 rounded-full border border-line px-4 py-2 text-sm outline-none focus:border-accent"
             />
             <button
               type="submit"
-              className="rounded-full bg-[#E91E63] px-5 py-2 text-sm font-semibold text-white"
+              className="rounded-full bg-accent px-5 py-2 text-sm font-semibold text-white"
             >
               بحث
             </button>
@@ -128,12 +127,12 @@ export function Header({
         </div>
       )}
 
-      <nav className="border-t border-[#f0e0d6]/60">
+      <nav className="border-t border-line/60">
         <div className="mx-auto flex max-w-7xl items-center justify-center gap-8 px-4 py-2 sm:px-6">
-          <Link href="/" className="text-sm font-medium text-[#3E2723]/70 transition hover:text-[#E91E63]">
+          <Link href="/" className="text-sm font-medium text-text/70 transition hover:text-accent">
             {t("home", locale)}
           </Link>
-          <Link href="/products" className="text-sm font-medium text-[#3E2723]/70 transition hover:text-[#E91E63]">
+          <Link href="/products" className="text-sm font-medium text-text/70 transition hover:text-accent">
             {t("products", locale)}
           </Link>
         </div>
