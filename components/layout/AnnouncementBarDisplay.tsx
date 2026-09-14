@@ -15,14 +15,14 @@ export function AnnouncementBarDisplay({
 
   if (!scrolling) {
     return (
-      <div className="bg-[#E91E63] py-2 text-center text-sm font-medium text-white">
+      <div className="bg-accent py-2 text-center text-sm font-medium text-white">
         {combinedText}
       </div>
     );
   }
 
   return (
-    <div className="overflow-hidden bg-[#E91E63] py-2 text-white">
+    <div className="overflow-hidden bg-accent py-2 text-white">
       <style>{`
         @keyframes hit-marquee-single {
           0% { transform: translateX(100%); }
