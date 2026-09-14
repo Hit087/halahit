@@ -73,7 +73,7 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
               <Link href={slide.ctaLink} className="mt-5 inline-block">
                 <Button
                   size="lg"
-                  className="rounded-full bg-primary px-8 text-white font-semibold shadow-lg hover:bg-primary-dark transition"
+                  className="rounded-full bg-accent px-8 text-white font-semibold shadow-lg hover:bg-accent-dark transition"
                 >
                   {slide.ctaText ?? "تسوق الآن"}
                 </Button>
