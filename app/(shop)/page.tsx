@@ -24,12 +24,12 @@ export default async function HomePage() {
       {/* منتجات مميزة */}
       <section className="mx-auto max-w-7xl px-4 pt-6 pb-10 sm:px-6">
         <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-xl sm:text-2xl font-bold text-[#3E2723]">
+          <h2 className="text-xl sm:text-2xl font-bold text-text">
             منتجات مميزة
           </h2>
           <Link
             href="/products"
-            className="text-sm font-medium text-[#E91E63] transition hover:underline"
+            className="text-sm font-medium text-accent transition hover:underline"
           >
             عرض الكل ←
           </Link>
@@ -40,7 +40,7 @@ export default async function HomePage() {
           ))}
         </div>
         {featured.length === 0 && (
-          <p className="text-center text-[#3E2723]/50 py-8">لا توجد منتجات مميزة حالياً</p>
+          <p className="text-center text-text/50 py-8">لا توجد منتجات مميزة حالياً</p>
         )}
       </section>
 
@@ -48,19 +48,19 @@ export default async function HomePage() {
       {categoriesWithProducts.map((category, idx) => (
         <section
           key={category.id}
-          className={`py-8 ${idx % 2 === 0 ? "bg-[#FDF6F0]" : "bg-white"}`}
+          className={`py-8 ${idx % 2 === 0 ? "bg-canvas" : "bg-white"}`}
         >
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
             <div className="mb-5 flex items-center justify-between">
               <div>
-                <h2 className="text-xl sm:text-2xl font-bold text-[#3E2723]">
+                <h2 className="text-xl sm:text-2xl font-bold text-text">
                   {category.name}
                 </h2>
-                <p className="mt-0.5 text-xs text-[#3E2723]/50">{category.nameEn}</p>
+                <p className="mt-0.5 text-xs text-text/50">{category.nameEn}</p>
               </div>
               <Link
                 href={`/products?category=${category.slug}`}
-                className="text-sm font-medium text-[#E91E63] transition hover:underline"
+                className="text-sm font-medium text-accent transition hover:underline"
               >
                 عرض الكل ←
               </Link>
@@ -75,8 +75,8 @@ export default async function HomePage() {
       ))}
 
       {/* تاغلاين */}
-      <section className="bg-[#FDF6F0] py-12 text-center">
-        <p className="font-display text-xl text-[#3E2723]/70 md:text-2xl">
+      <section className="bg-canvas py-12 text-center">
+        <p className="font-display text-xl text-text/70 md:text-2xl">
           {settings?.tagline ?? "لكل قطعة ذكرى"}
         </p>
       </section>
