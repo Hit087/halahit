@@ -9,16 +9,15 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary: "#F4A6C1",
-        // ==== إضافة جديدة: نفس درجة الـhover اللي كانت مكتوبة يدويًا بعدة ملفات ====
-        "primary-dark": "#e392b0",
-        accent: "#E91E63",
+        // ==== باليت جديد: وردي مغبّر هادئ + نبيتي فخم بدل الوردي الفاقع ====
+        primary: "#E8C4C4",
+        "primary-dark": "#D9A8A8",
+        accent: "#7A3B41",
+        "accent-dark": "#5F2C31",
         cream: "#F8F1E7",
         beige: "#E8D8C3",
         text: "#3E2723",
-        // ==== إضافة جديدة: خلفية الصفحة الفاتحة (كانت بدون اسم) ====
-        canvas: "#FDF6F0",
-        // ==== إضافة جديدة: لون الحدود الفاتح (كان بدون اسم) ====
+        canvas: "#FBF3EC",
         line: "#f0e0d6",
       },
       borderRadius: {
