@@ -39,6 +39,7 @@ export async function createReview(formData: FormData) {
       productId: parsed.data.productId,
       userId: session.user.id,
       customerName: session.user.name || session.user.email || "عميل",
+      customerEmail: session.user.email ?? null,
       rating: parsed.data.rating,
       comment: parsed.data.comment,
       approved: false,
