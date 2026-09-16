@@ -5,7 +5,6 @@ export const loginSchema = z.object({
   password: z.string().min(6),
 });
 
-// ==================== إضافة جديدة: تسجيل حساب عميل ====================
 export const registerSchema = z
   .object({
     name: z.string().min(2).max(100),
@@ -53,7 +52,6 @@ export const couponSchema = z.object({
   active: z.coerce.boolean(),
 });
 
-// ==================== تعديل: إضافة الضريبة والسجل التجاري ====================
 export const settingsSchema = z.object({
   storeName: z.string().min(1).max(200),
   tagline: z.string().max(300),
@@ -96,7 +94,6 @@ export const heroSlideSchema = z.object({
   active: z.boolean(),
 });
 
-// ==================== تعديل: إضافة بريد اختياري للطلب ====================
 export const checkoutSchema = z.object({
   customerName: z.string().min(2).max(100),
   customerPhone: z.string().min(8).max(20),
@@ -144,23 +141,27 @@ export const pageSchema = z.object({
   sortOrder: z.coerce.number().int().min(0),
 });
 
-// ==================== إضافة جديدة: شريط الإعلانات ====================
 export const announcementBarSchema = z.object({
   message: z.string().min(1).max(300),
   active: z.coerce.boolean(),
   sortOrder: z.coerce.number().int().min(0),
 });
 
-// ==================== إضافة جديدة: النشرة البريدية ====================
 export const newsletterSchema = z.object({
   email: z.string().email(),
 });
 
-// ==================== إضافة جديدة: عناصر الفوتر المرنة ====================
 export const footerItemSchema = z.object({
   section: z.enum(["SOCIAL", "CONTACT", "TRUST", "PAYMENT", "DELIVERY"]),
   label: z.string().optional(),
   link: z.string().optional(),
   active: z.coerce.boolean(),
   sortOrder: z.coerce.number().int().min(0),
+});
+
+// ==================== إضافة جديدة: تقييمات المنتجات ====================
+export const reviewSchema = z.object({
+  productId: z.string().min(1),
+  rating: z.coerce.number().int().min(1).max(5),
+  comment: z.string().max(1000).optional(),
 });
