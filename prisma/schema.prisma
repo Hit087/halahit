@@ -24,6 +24,7 @@ model User {
 
   orders   Order[]
   wishlist WishlistItem[]
+  reviews  Review[]
 }
 
 model Category {
@@ -53,6 +54,7 @@ model Product {
   images        ProductImage[]
   orderItems    OrderItem[]
   wishlistedBy  WishlistItem[]
+  reviews       Review[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
@@ -233,7 +235,6 @@ model NewsletterSubscriber {
   createdAt DateTime @default(now())
 }
 
-// ==================== جديد: عناصر الفوتر المرنة ====================
 enum FooterSection {
   SOCIAL
   CONTACT
@@ -252,4 +253,20 @@ model FooterItem {
   sortOrder Int           @default(0)
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
+}
+
+// ==================== جديد: تقييمات المنتجات ====================
+model Review {
+  id           String   @id @default(cuid())
+  productId    String
+  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customerName String
+  rating       Int
+  comment      String?  @db.Text
+  approved     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  @@unique([userId, productId])
 }
