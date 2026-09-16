@@ -140,7 +140,6 @@ export async function getProducts(filters?: {
     }),
   };
 
-  // ==== إضافة جديدة: فرز حسب الأكثر مبيعًا ====
   if (filters?.sort === "bestselling") {
     const topSold = await prisma.orderItem.groupBy({
       by: ["productId"],
@@ -150,7 +149,6 @@ export async function getProducts(filters?: {
     const orderedIds = topSold.map((t) => t.productId);
 
     if (orderedIds.length === 0) {
-      // ما فيه مبيعات بعد — نرجع بالترتيب الافتراضي
       const products = await prisma.product.findMany({
         where: whereClause,
         include: { images: { orderBy: { sortOrder: "asc" } }, category: true },
@@ -170,7 +168,6 @@ export async function getProducts(filters?: {
       .map(mapProduct);
   }
 
-  // ==== الافتراضي: الأحدث أولاً ====
   const products = await prisma.product.findMany({
     where: whereClause,
     include: {
@@ -246,4 +243,24 @@ export async function getOrderAdmin(id: string) {
     where: { id },
     include: { items: { include: { product: true } } },
   });
+}
+
+// ==================== إضافة جديدة: تقييمات المنتجات ====================
+export async function getProductReviews(productId: string) {
+  return prisma.review.findMany({
+    where: { productId, approved: true },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
+export async function getReviewStats(productId: string) {
+  const result = await prisma.review.aggregate({
+    where: { productId, approved: true },
+    _avg: { rating: true },
+    _count: { rating: true },
+  });
+  return {
+    average: result._avg.rating ?? 0,
+    count: result._count.rating,
+  };
 }
