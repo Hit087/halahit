@@ -20,6 +20,18 @@ export async function approveReview(id: string) {
   return { success: true };
 }
 
+// ==================== إضافة جديدة: إخفاء تقييم منشور بأي وقت ====================
+export async function unapproveReview(id: string) {
+  await guard();
+  const review = await prisma.review.update({
+    where: { id },
+    data: { approved: false },
+  });
+  revalidatePath("/admin/reviews");
+  revalidatePath(`/products/${review.productId}`);
+  return { success: true };
+}
+
 export async function deleteReview(id: string) {
   await guard();
   const review = await prisma.review.delete({ where: { id } });
