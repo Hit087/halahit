@@ -4,6 +4,7 @@ import {
   getRelatedProducts,
 } from "@/server/queries";
 import { ProductDetailClient } from "./ProductDetailClient";
+import { ProductReviews } from "./ProductReviews";
 import { ProductCard } from "@/components/products/ProductCard";
 import { trackEvent } from "@/server/analytics";
 
@@ -26,6 +27,9 @@ export default async function ProductDetailPage({
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
       <ProductDetailClient product={product} />
+
+      {/* ==== إضافة جديدة: قسم التقييمات ==== */}
+      <ProductReviews productId={product.id} />
 
       {related.length > 0 && (
         <section className="mt-20">
