@@ -255,7 +255,6 @@ model FooterItem {
   updatedAt DateTime      @updatedAt
 }
 
-// ==================== جديد: تقييمات المنتجات ====================
 model Review {
   id           String   @id @default(cuid())
   productId    String
@@ -263,6 +262,8 @@ model Review {
   userId       String
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   customerName String
+  // ==== إضافة جديدة: بريد المقيّم (عشان يقدر الأدمن يرد عليه مباشرة) ====
+  customerEmail String?
   rating       Int
   comment      String?  @db.Text
   approved     Boolean  @default(false)
