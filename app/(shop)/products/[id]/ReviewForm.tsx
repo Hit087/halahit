@@ -27,11 +27,8 @@ export function ReviewForm({ productId }: { productId: string }) {
   };
 
   if (result?.success) {
-    return (
-      <p className="text-sm text-primary">
-        شكراً لتقييمك! سيظهر بعد مراجعته من الإدارة.
-      </p>
-    );
+    // ==== تعديل: رسالة أبسط، بدون ذكر تفاصيل المراجعة الداخلية ====
+    return <p className="text-sm text-primary">شكراً لتقييمك! 🎉</p>;
   }
 
   return (
