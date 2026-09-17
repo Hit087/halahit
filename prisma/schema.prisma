@@ -22,6 +22,10 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  // ==== إضافة جديدة: استرجاع كلمة المرور ====
+  resetToken       String?   @unique
+  resetTokenExpiry DateTime?
+
   orders   Order[]
   wishlist WishlistItem[]
   reviews  Review[]
@@ -256,18 +260,17 @@ model FooterItem {
 }
 
 model Review {
-  id           String   @id @default(cuid())
-  productId    String
-  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  customerName String
-  // ==== إضافة جديدة: بريد المقيّم (عشان يقدر الأدمن يرد عليه مباشرة) ====
+  id            String   @id @default(cuid())
+  productId     String
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customerName  String
   customerEmail String?
-  rating       Int
-  comment      String?  @db.Text
-  approved     Boolean  @default(false)
-  createdAt    DateTime @default(now())
+  rating        Int
+  comment       String?  @db.Text
+  approved      Boolean  @default(false)
+  createdAt     DateTime @default(now())
 
   @@unique([userId, productId])
 }
