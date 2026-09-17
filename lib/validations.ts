@@ -17,6 +17,22 @@ export const registerSchema = z
     path: ["confirmPassword"],
   });
 
+// ==================== إضافة جديدة: استرجاع كلمة المرور ====================
+export const forgotPasswordSchema = z.object({
+  email: z.string().email(),
+});
+
+export const resetPasswordSchema = z
+  .object({
+    token: z.string().min(1),
+    password: z.string().min(6).max(100),
+    confirmPassword: z.string().min(6).max(100),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "كلمتا المرور غير متطابقتين",
+    path: ["confirmPassword"],
+  });
+
 export const productSchema = z.object({
   name: z.string().min(1).max(200),
   nameEn: z.string().min(1).max(200),
@@ -159,7 +175,6 @@ export const footerItemSchema = z.object({
   sortOrder: z.coerce.number().int().min(0),
 });
 
-// ==================== إضافة جديدة: تقييمات المنتجات ====================
 export const reviewSchema = z.object({
   productId: z.string().min(1),
   rating: z.coerce.number().int().min(1).max(5),
