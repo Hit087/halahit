@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/Button";
@@ -44,6 +45,12 @@ export function LoginForm() {
         <Button type="submit" variant="accent" className="w-full" loading={loading}>
           تسجيل الدخول
         </Button>
+        {/* ==== إضافة جديدة: رابط نسيت كلمة المرور ==== */}
+        <p className="text-center text-sm">
+          <Link href="/account/forgot-password" className="text-accent hover:underline">
+            نسيت كلمة المرور؟
+          </Link>
+        </p>
       </form>
     </Card>
   );
