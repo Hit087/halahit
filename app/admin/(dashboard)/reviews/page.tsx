@@ -19,7 +19,16 @@ export default async function AdminReviewsPage() {
                 <p className="font-medium">
                   {r.customerName} — {r.product.name}
                 </p>
-                <p className="text-sm text-text/60">{"⭐".repeat(r.rating)}</p>
+                {/* ==== إضافة جديدة: بريد المقيّم + رابط رد مباشر ==== */}
+                {r.customerEmail && (
+                  <a
+                    href={`mailto:${r.customerEmail}`}
+                    className="text-xs text-accent hover:underline"
+                  >
+                    {r.customerEmail}
+                  </a>
+                )}
+                <p className="mt-1 text-sm text-text/60">{"⭐".repeat(r.rating)}</p>
                 {r.comment && <p className="mt-1 text-sm text-text/70">{r.comment}</p>}
               </div>
               <Badge variant={r.approved ? "success" : "muted"}>
