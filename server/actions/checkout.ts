@@ -8,6 +8,7 @@ import { checkoutSchema } from "@/lib/validations";
 import { trackEvent } from "@/server/analytics";
 import { getSession } from "@/lib/auth";
 import { sendOrderConfirmationEmail } from "@/lib/email";
+import { createMoyasarInvoice, isMoyasarConfigured } from "@/lib/moyasar";
 
 const VAT_RATE = 0.15;
 
@@ -47,7 +48,14 @@ export async function processCheckout(data: unknown) {
   if (!paymentMethod) {
     return { success: false as const, error: "طريقة الدفع غير متاحة" };
   }
-  if (paymentMethod.type === "GATEWAY") {
+
+  const settings = await prisma.settings.findUnique({
+    where: { id: "default" },
+  });
+
+  // ==== تعديل: بوابة الدفع تُفعّل فقط لو مضاف مفتاح ميسر الحقيقي + مفعّلة من الإعدادات ====
+  const gatewayReady = isMoyasarConfigured() && (settings?.onlinePaymentEnabled ?? false);
+  if (paymentMethod.type === "GATEWAY" && !gatewayReady) {
     return {
       success: false as const,
       error: "الدفع الإلكتروني غير مفعّل حاليًا، الرجاء اختيار الدفع عند الاستلام",
@@ -110,10 +118,6 @@ export async function processCheckout(data: unknown) {
     appliedCoupon = coupon.code;
   }
 
-  const settings = await prisma.settings.findUnique({
-    where: { id: "default" },
-  });
-
   const vatEnabled = settings?.vatEnabled ?? true;
   const netInclusive = Math.max(0, subtotal - discount);
   const vatAmount = vatEnabled
@@ -141,7 +145,6 @@ export async function processCheckout(data: unknown) {
     locationLink,
   });
 
-  // ==== إضافة جديدة: ربط الطلب بحساب العميل تلقائيًا لو مسجّل دخول ====
   const session = await getSession();
   const customerId = session?.user?.id ?? null;
   const finalEmail = customerEmail || session?.user?.email || undefined;
@@ -200,6 +203,27 @@ export async function processCheckout(data: unknown) {
       total,
       trackingToken: order.trackingToken,
     });
+  }
+
+  // ==== إضافة جديدة: لو طريقة الدفع بوابة إلكترونية جاهزة فعليًا، نوديه لصفحة الدفع بدل واتساب ====
+  if (paymentMethod.type === "GATEWAY" && gatewayReady) {
+    const invoiceResult = await createMoyasarInvoice({
+      amount: total,
+      description: `طلب رقم ${orderNumber} - ${settings?.storeName ?? "Hit"}`,
+      callbackUrl: `https://halahit.onrender.com/orders/${order.trackingToken}`,
+    });
+
+    if (!invoiceResult.success) {
+      return { success: false as const, error: invoiceResult.error };
+    }
+
+    return {
+      success: true as const,
+      orderId: order.id,
+      orderNumber,
+      whatsappUrl: invoiceResult.url,
+      total,
+    };
   }
 
   const whatsappUrl = getWhatsAppUrl(
