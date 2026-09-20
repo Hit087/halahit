@@ -75,7 +75,6 @@ export function SettingsForm({ settings }: { settings: Settings | null }) {
           defaultValue={settings?.theChefzLink ?? ""}
         />
 
-        {/* ==== إضافة جديدة: الضريبة ==== */}
         <div className="border-t border-beige pt-4 mt-6">
           <h3 className="font-semibold mb-3">الضريبة</h3>
           <label className="flex items-center gap-2 text-sm">
@@ -90,7 +89,6 @@ export function SettingsForm({ settings }: { settings: Settings | null }) {
           </label>
         </div>
 
-        {/* ==== إضافة جديدة: السجل التجاري والرخصة ==== */}
         <div className="border-t border-beige pt-4 mt-6">
           <h3 className="font-semibold mb-3">السجل التجاري والرخصة</h3>
           <div className="space-y-4">
@@ -115,6 +113,26 @@ export function SettingsForm({ settings }: { settings: Settings | null }) {
               إظهار السجل التجاري والرخصة بتذييل الموقع
             </label>
           </div>
+        </div>
+
+        {/* ==== إضافة جديدة: تفعيل الدفع الإلكتروني (ميسر) ==== */}
+        <div className="border-t border-beige pt-4 mt-6">
+          <h3 className="font-semibold mb-3">الدفع الإلكتروني (ميسر)</h3>
+          <p className="mb-3 text-sm text-text/60">
+            هذا السويتش ما يشتغل فعليًا إلا بعد إضافة مفتاح ميسر الحقيقي (MOYASAR_SECRET_KEY)
+            بمتغيرات البيئة على Vercel وRender. لو فعّلته الحين بدون مفتاح، العملاء بيستمرون
+            يُوجّهون تلقائيًا لواتساب كما هو الوضع الحالي.
+          </p>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="hidden" name="onlinePaymentEnabled" value="false" />
+            <input
+              type="checkbox"
+              name="onlinePaymentEnabled"
+              value="true"
+              defaultChecked={settings?.onlinePaymentEnabled ?? false}
+            />
+            تفعيل الدفع الإلكتروني عبر ميسر
+          </label>
         </div>
 
         <div className="border-t border-beige pt-4 mt-6">
