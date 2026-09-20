@@ -17,7 +17,6 @@ export const registerSchema = z
     path: ["confirmPassword"],
   });
 
-// ==================== إضافة جديدة: استرجاع كلمة المرور ====================
 export const forgotPasswordSchema = z.object({
   email: z.string().email(),
 });
@@ -68,6 +67,7 @@ export const couponSchema = z.object({
   active: z.coerce.boolean(),
 });
 
+// ==================== تعديل: إضافة سويتش تفعيل الدفع الإلكتروني ====================
 export const settingsSchema = z.object({
   storeName: z.string().min(1).max(200),
   tagline: z.string().max(300),
@@ -86,6 +86,7 @@ export const settingsSchema = z.object({
   commercialRegNumber: z.string().optional().or(z.literal("")),
   commercialLicenseNumber: z.string().optional().or(z.literal("")),
   commercialRegVisible: z.coerce.boolean(),
+  onlinePaymentEnabled: z.coerce.boolean(),
 });
 
 export const adminPasswordSchema = z
