@@ -42,11 +42,12 @@ export async function updateSettings(formData: FormData) {
     snapchatLink: formData.get("snapchatLink") || "",
     kitalink: formData.get("kitalink") || "",
     theChefzLink: formData.get("theChefzLink") || "",
-    // ==== إضافة جديدة ====
     vatEnabled: formData.getAll("vatEnabled").includes("true"),
     commercialRegNumber: formData.get("commercialRegNumber") || "",
     commercialLicenseNumber: formData.get("commercialLicenseNumber") || "",
     commercialRegVisible: formData.getAll("commercialRegVisible").includes("true"),
+    // ==== إضافة جديدة ====
+    onlinePaymentEnabled: formData.getAll("onlinePaymentEnabled").includes("true"),
   };
 
   const parsed = settingsSchema.safeParse(raw);
