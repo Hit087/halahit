@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import {
   getProductById,
   getRelatedProducts,
@@ -7,6 +8,35 @@ import { ProductDetailClient } from "./ProductDetailClient";
 import { ProductReviews } from "./ProductReviews";
 import { ProductCard } from "@/components/products/ProductCard";
 import { trackEvent } from "@/server/analytics";
+
+// ==================== إضافة جديدة: عنوان ووصف مخصص لكل منتج (SEO) ====================
+export async function generateMetadata({
+  params,
+}: {
+  params: { id: string };
+}): Promise<Metadata> {
+  const product = await getProductById(params.id);
+  if (!product) return {};
+
+  const description = product.description.slice(0, 160);
+  const image = product.images[0]?.url;
+
+  return {
+    title: product.name,
+    description,
+    openGraph: {
+      title: product.name,
+      description,
+      images: image ? [{ url: image }] : undefined,
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: product.name,
+      description,
+    },
+  };
+}
 
 export default async function ProductDetailPage({
   params,
@@ -28,7 +58,6 @@ export default async function ProductDetailPage({
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
       <ProductDetailClient product={product} />
 
-      {/* ==== إضافة جديدة: قسم التقييمات ==== */}
       <ProductReviews productId={product.id} />
 
       {related.length > 0 && (
