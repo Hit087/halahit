@@ -26,36 +26,71 @@ async function safeGetSettings() {
       settings ?? {
         storeName: "Hit | هيت",
         tagline: "لكل قطعة ذكرى",
+        logo: null as string | null,
       }
     );
   } catch (e) {
     return {
       storeName: "Hit | هيت",
       tagline: "لكل قطعة ذكرى",
+      logo: null as string | null,
     };
   }
 }
+
+const SITE_URL = "https://halahit.onrender.com";
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await safeGetSettings();
 
   return {
+    metadataBase: new URL(SITE_URL),
     title: {
       default: settings.storeName,
       template: `%s | ${settings.storeName}`,
     },
     description: settings.tagline,
+    keywords: [
+      "هيت",
+      "حلويات",
+      "بوكسات هدايا",
+      "قهوة",
+      "تجمعات",
+      "توصيل حلويات",
+      "Hit",
+    ],
     manifest: "/manifest.json",
     appleWebApp: {
       capable: true,
       statusBarStyle: "default",
       title: settings.storeName,
     },
+    robots: {
+      index: true,
+      follow: true,
+    },
+    openGraph: {
+      type: "website",
+      locale: "ar_SA",
+      siteName: settings.storeName,
+      title: settings.storeName,
+      description: settings.tagline,
+      url: SITE_URL,
+      images: settings.logo ? [{ url: settings.logo }] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: settings.storeName,
+      description: settings.tagline,
+    },
+    alternates: {
+      canonical: SITE_URL,
+    },
   };
 }
 
 export const viewport: Viewport = {
-  themeColor: "#F4A6C1",
+  themeColor: "#7A3B41",
   width: "device-width",
   initialScale: 1,
 };
