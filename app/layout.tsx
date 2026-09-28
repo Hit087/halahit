@@ -46,18 +46,26 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     metadataBase: new URL(SITE_URL),
     title: {
-      default: settings.storeName,
+      default: `${settings.storeName} — حلويات وبوكسات هدايا وتجمعات في الرياض`,
       template: `%s | ${settings.storeName}`,
     },
-    description: settings.tagline,
+    description: `${settings.tagline} — متجر هيت لحلويات وقهوة وبوكسات تجمعات وهدايا فاخرة في الرياض، توصيل لكل أحياء الرياض.`,
+    // ==== تعديل: كلمات مفتاحية أوسع ومستهدفة جغرافيًا (الرياض) ====
     keywords: [
       "هيت",
-      "حلويات",
-      "بوكسات هدايا",
-      "قهوة",
-      "تجمعات",
-      "توصيل حلويات",
       "Hit",
+      "حلويات الرياض",
+      "بوكسات حلى",
+      "بوكس تجمعات",
+      "بوكسات هدايا الرياض",
+      "توصيل حلويات الرياض",
+      "قهوة مختصة الرياض",
+      "بوكس قهوة",
+      "هدايا تخرج",
+      "تعبئة صحون حلى",
+      "مكعبات جبن حلى",
+      "ورد السميد",
+      "حلى فاخر توصيل",
     ],
     manifest: "/manifest.json",
     appleWebApp: {
@@ -73,7 +81,7 @@ export async function generateMetadata(): Promise<Metadata> {
       type: "website",
       locale: "ar_SA",
       siteName: settings.storeName,
-      title: settings.storeName,
+      title: `${settings.storeName} — حلويات وبوكسات هدايا في الرياض`,
       description: settings.tagline,
       url: SITE_URL,
       images: settings.logo ? [{ url: settings.logo }] : undefined,
@@ -95,13 +103,37 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const settings = await safeGetSettings();
+
+  // ==== إضافة جديدة: بيانات هيكلية (JSON-LD) تساعد قوقل يفهم نشاطك التجاري ====
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Store",
+    name: settings.storeName,
+    description: settings.tagline,
+    url: SITE_URL,
+    image: settings.logo ?? undefined,
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: "الرياض",
+      addressCountry: "SA",
+    },
+    areaServed: "الرياض",
+  };
+
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body className={`${arabic.variable} ${display.variable} font-arabic`}>
         <Providers>
           <PageViewTracker />
