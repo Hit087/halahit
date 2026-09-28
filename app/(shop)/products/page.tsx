@@ -1,6 +1,36 @@
+import type { Metadata } from "next";
 import { ProductCard } from "@/components/products/ProductCard";
 import { getProducts, getActiveCategories } from "@/server/queries";
 import Link from "next/link";
+
+// ==================== إضافة جديدة: عنوان ووصف مستهدف جغرافيًا لصفحة المنتجات ====================
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: { category?: string; q?: string };
+}): Promise<Metadata> {
+  if (searchParams.category) {
+    const categories = await getActiveCategories();
+    const category = categories.find((c) => c.slug === searchParams.category);
+    if (category) {
+      return {
+        title: `${category.name} — توصيل الرياض`,
+        description: `تسوّق ${category.name} من هيت مع توصيل سريع لكل أحياء الرياض.`,
+      };
+    }
+  }
+
+  if (searchParams.q) {
+    return {
+      title: `نتائج البحث عن "${searchParams.q}"`,
+    };
+  }
+
+  return {
+    title: "كل المنتجات — حلويات وبوكسات هدايا في الرياض",
+    description: "تصفّح كل منتجات هيت: حلويات، بوكسات تجمعات، قهوة، وهدايا فاخرة مع توصيل داخل الرياض.",
+  };
+}
 
 export default async function ProductsPage({
   searchParams,
@@ -18,7 +48,6 @@ export default async function ProductsPage({
     getActiveCategories(),
   ]);
 
-  // بناء رابط يحافظ على باقي المعاملات عند تغيير معامل واحد
   const buildUrl = (overrides: Record<string, string | undefined>) => {
     const params = new URLSearchParams();
     const merged = { category: searchParams.category, q: searchParams.q, sort: searchParams.sort, ...overrides };
@@ -33,7 +62,6 @@ export default async function ProductsPage({
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
       <h1 className="font-display text-4xl font-bold text-text">المنتجات</h1>
 
-      {/* ==== إضافة جديدة: صندوق البحث ==== */}
       <form action="/products" method="GET" className="mt-6 max-w-md">
         {searchParams.category && (
           <input type="hidden" name="category" value={searchParams.category} />
@@ -88,7 +116,6 @@ export default async function ProductsPage({
           ))}
         </div>
 
-        {/* ==== إضافة جديدة: فرز حسب الأحدث/الأكثر مبيعًا ==== */}
         <div className="flex items-center gap-2 text-sm">
           <span className="text-text/60">ترتيب:</span>
           <Link
