@@ -35,13 +35,14 @@ export function Header({
 
   return (
     <header className="sticky top-0 z-50 bg-canvas border-b border-line/60 shadow-sm">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
+      {/* شبكة من 3 أعمدة: الجهتين بنفس العرض، فالشعار يجي بنص الشاشة بالضبط */}
+      <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center px-3 py-3 sm:px-6">
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-self-start gap-1 sm:gap-2">
           <Link
             href="/cart"
             className={cn(
-              "relative flex h-11 w-11 items-center justify-center rounded-full bg-primary text-white transition hover:bg-primary-dark"
+              "relative flex h-9 w-9 items-center justify-center rounded-full bg-primary text-white transition hover:bg-primary-dark sm:h-11 sm:w-11"
             )}
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -59,7 +60,7 @@ export function Header({
           <button
             type="button"
             onClick={() => setSearchOpen((v) => !v)}
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-white transition hover:bg-primary-dark"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-white transition hover:bg-primary-dark sm:h-11 sm:w-11"
             aria-label="بحث"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -69,7 +70,7 @@ export function Header({
 
           <Link
             href={isLoggedIn ? "/account" : "/account/login"}
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-white transition hover:bg-primary-dark"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-white transition hover:bg-primary-dark sm:h-11 sm:w-11"
             aria-label="حسابي"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -78,7 +79,10 @@ export function Header({
           </Link>
         </div>
 
-        <Link href="/" className="flex flex-col items-center gap-1">
+        <Link
+          href="/"
+          className="flex max-w-[10rem] flex-col items-center gap-1 justify-self-center text-center"
+        >
           {logo ? (
             <Image
               src={logo}
@@ -100,7 +104,7 @@ export function Header({
         <button
           type="button"
           onClick={toggleLocale}
-          className="flex h-11 items-center justify-center rounded-full bg-primary px-4 text-sm font-semibold text-white transition hover:bg-primary-dark"
+          className="flex h-9 items-center justify-center justify-self-end rounded-full bg-primary px-3 text-xs font-semibold text-white transition hover:bg-primary-dark sm:h-11 sm:px-4 sm:text-sm"
         >
           {t("language", locale)}
         </button>
