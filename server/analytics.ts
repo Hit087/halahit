@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { Prisma, OrderStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 export async function trackEvent(
@@ -22,9 +22,10 @@ export async function trackEvent(
 }
 
 export async function getAnalyticsSummary() {
-  const [visits, orders, productViews] = await Promise.all([
+  const [visits, orders, productViewsTotal, productViews] = await Promise.all([
     prisma.analyticsEvent.count({ where: { type: "PAGE_VIEW" } }),
     prisma.order.count(),
+    prisma.analyticsEvent.count({ where: { type: "PRODUCT_VIEW" } }),
     prisma.analyticsEvent.groupBy({
       by: ["productId"],
       where: { type: "PRODUCT_VIEW", productId: { not: null } },
@@ -53,9 +54,30 @@ export async function getAnalyticsSummary() {
   return {
     totalVisits: visits,
     totalOrders: orders,
+    totalProductViews: productViewsTotal,
     popularProducts: orderedPopular,
     productViewCounts: productViews,
   };
+}
+
+// ==================== أدوات التاريخ (توقيت الرياض) ====================
+
+const RIYADH_OFFSET_MS = 3 * 60 * 60 * 1000; // الرياض UTC+3 بدون توقيت صيفي
+
+function pad(n: number) {
+  return String(n).padStart(2, "0");
+}
+
+// بداية أول يوم بالفترة (بتوقيت الرياض) محوّلة لـ UTC
+function riyadhDayStart(daysInclusive: number) {
+  const nowRiyadh = new Date(Date.now() + RIYADH_OFFSET_MS);
+  return new Date(
+    Date.UTC(
+      nowRiyadh.getUTCFullYear(),
+      nowRiyadh.getUTCMonth(),
+      nowRiyadh.getUTCDate() - (daysInclusive - 1)
+    ) - RIYADH_OFFSET_MS
+  );
 }
 
 // ==================== المبيعات (للرسم البياني) ====================
@@ -66,12 +88,7 @@ export type SalesDay = {
   orders: number;
 };
 
-const RIYADH_OFFSET_MS = 3 * 60 * 60 * 1000; // الرياض UTC+3 بدون توقيت صيفي
 const SALES_DAYS = 90;
-
-function pad(n: number) {
-  return String(n).padStart(2, "0");
-}
 
 // المبيعات = كل الطلبات ما عدا الملغية (CANCELLED)
 export async function getSalesSummary() {
@@ -80,10 +97,7 @@ export async function getSalesSummary() {
   const month = nowRiyadh.getUTCMonth();
   const day = nowRiyadh.getUTCDate();
 
-  // بداية أول يوم بالفترة (بتوقيت الرياض) محوّلة لـ UTC
-  const startUtc = new Date(
-    Date.UTC(year, month, day - (SALES_DAYS - 1)) - RIYADH_OFFSET_MS
-  );
+  const startUtc = riyadhDayStart(SALES_DAYS);
 
   const [allTime, recentOrders] = await Promise.all([
     prisma.order.aggregate({
@@ -126,5 +140,127 @@ export async function getSalesSummary() {
     salesOrderCount,
     averageOrder: salesOrderCount > 0 ? totalSales / salesOrderCount : 0,
     days: Array.from(buckets.values()),
+  };
+}
+
+// ==================== إحصائيات الطلبات التفصيلية ====================
+
+export type StatGroup = { label: string; count: number; total: number };
+export type TopProduct = {
+  productId: string;
+  name: string;
+  quantity: number;
+  revenue: number;
+};
+
+// days = null يعني كل الفترة. المبيعات والمنتجات والطرق بدون الطلبات الملغية،
+// أما توزيع الحالات فيشمل كل الحالات (بما فيها الملغية).
+export async function getOrderStats(days: number | null) {
+  const start = days ? riyadhDayStart(days) : null;
+  const dateWhere: Prisma.OrderWhereInput = start
+    ? { createdAt: { gte: start } }
+    : {};
+  const activeWhere: Prisma.OrderWhereInput = {
+    ...dateWhere,
+    status: { not: OrderStatus.CANCELLED },
+  };
+
+  const [statusGroups, paymentGroups, fulfillmentGroups, activeOrders, items] =
+    await Promise.all([
+      prisma.order.groupBy({
+        by: ["status"],
+        where: dateWhere,
+        _count: { _all: true },
+      }),
+      prisma.order.groupBy({
+        by: ["paymentMethod"],
+        where: activeWhere,
+        _count: { _all: true },
+        _sum: { total: true },
+      }),
+      prisma.order.groupBy({
+        by: ["fulfillmentMethod"],
+        where: activeWhere,
+        _count: { _all: true },
+        _sum: { total: true },
+      }),
+      prisma.order.findMany({
+        where: activeWhere,
+        select: { total: true, createdAt: true },
+      }),
+      prisma.orderItem.findMany({
+        where: { order: activeWhere },
+        select: {
+          productId: true,
+          productName: true,
+          quantity: true,
+          price: true,
+        },
+      }),
+    ]);
+
+  // ملخص
+  const revenue = activeOrders.reduce((sum, o) => sum + Number(o.total), 0);
+  const ordersCount = activeOrders.length;
+
+  // ساعات الذروة (بتوقيت الرياض)
+  const hours: number[] = Array.from({ length: 24 }, () => 0);
+  for (const o of activeOrders) {
+    const h = new Date(o.createdAt.getTime() + RIYADH_OFFSET_MS).getUTCHours();
+    hours[h] += 1;
+  }
+
+  // أكثر المنتجات طلبًا
+  const productMap = new Map<string, TopProduct>();
+  for (const it of items) {
+    const existing = productMap.get(it.productId);
+    const lineRevenue = Number(it.price) * it.quantity;
+    if (existing) {
+      existing.quantity += it.quantity;
+      existing.revenue += lineRevenue;
+    } else {
+      productMap.set(it.productId, {
+        productId: it.productId,
+        name: it.productName,
+        quantity: it.quantity,
+        revenue: lineRevenue,
+      });
+    }
+  }
+  const topProducts = Array.from(productMap.values())
+    .sort((a, b) => b.quantity - a.quantity || b.revenue - a.revenue)
+    .slice(0, 10);
+
+  const statuses = statusGroups
+    .map((g) => ({ status: g.status as string, count: g._count._all }))
+    .sort((a, b) => b.count - a.count);
+
+  const payments: StatGroup[] = paymentGroups
+    .map((g) => ({
+      label: g.paymentMethod ?? "غير محدد",
+      count: g._count._all,
+      total: Number(g._sum.total ?? 0),
+    }))
+    .sort((a, b) => b.count - a.count);
+
+  const fulfillments: StatGroup[] = fulfillmentGroups
+    .map((g) => ({
+      label: g.fulfillmentMethod ?? "غير محدد",
+      count: g._count._all,
+      total: Number(g._sum.total ?? 0),
+    }))
+    .sort((a, b) => b.count - a.count);
+
+  return {
+    summary: {
+      orders: ordersCount,
+      revenue,
+      average: ordersCount > 0 ? revenue / ordersCount : 0,
+    },
+    statuses,
+    payments,
+    fulfillments,
+    topProducts,
+    hours,
   };
 }
