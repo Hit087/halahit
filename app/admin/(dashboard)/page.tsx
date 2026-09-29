@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getAnalyticsSummary, getSalesSummary } from "@/server/analytics";
 import { Card } from "@/components/ui/Card";
 import { SalesChart } from "@/components/admin/SalesChart";
@@ -12,8 +13,18 @@ export default async function AdminDashboardPage() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl font-bold">لوحة التحكم</h1>
-      <p className="mt-1 text-text/60">مرحباً بك في إدارة Hit</p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="font-display text-3xl font-bold">لوحة التحكم</h1>
+          <p className="mt-1 text-text/60">مرحباً بك في إدارة Hit</p>
+        </div>
+        <Link
+          href="/admin/stats"
+          className="rounded-luxury bg-primary px-4 py-2 text-sm font-medium text-text transition hover:opacity-90"
+        >
+          إحصائيات الطلبات التفصيلية
+        </Link>
+      </div>
 
       <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <Card>
@@ -29,9 +40,9 @@ export default async function AdminDashboardPage() {
           </p>
         </Card>
         <Card>
-          <p className="text-sm text-text/60">المنتجات الأكثر مشاهدة</p>
+          <p className="text-sm text-text/60">إجمالي مشاهدات المنتجات</p>
           <p className="mt-2 text-4xl font-bold text-accent">
-            {analytics.popularProducts.length}
+            {analytics.totalProductViews}
           </p>
         </Card>
       </div>
