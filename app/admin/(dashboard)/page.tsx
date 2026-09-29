@@ -1,10 +1,14 @@
-import { getAnalyticsSummary } from "@/server/analytics";
+import { getAnalyticsSummary, getSalesSummary } from "@/server/analytics";
 import { Card } from "@/components/ui/Card";
+import { SalesChart } from "@/components/admin/SalesChart";
 import { formatPrice, decimalToNumber } from "@/lib/utils";
 import Image from "next/image";
 
 export default async function AdminDashboardPage() {
-  const analytics = await getAnalyticsSummary();
+  const [analytics, sales] = await Promise.all([
+    getAnalyticsSummary(),
+    getSalesSummary(),
+  ]);
 
   return (
     <div>
@@ -31,6 +35,27 @@ export default async function AdminDashboardPage() {
           </p>
         </Card>
       </div>
+
+      <section className="mt-10">
+        <h2 className="text-xl font-semibold mb-4">المبيعات</h2>
+        <div className="grid gap-6 sm:grid-cols-2">
+          <Card>
+            <p className="text-sm text-text/60">إجمالي المبيعات (بدون الملغية)</p>
+            <p className="mt-2 text-3xl font-bold text-accent">
+              {formatPrice(sales.totalSales)}
+            </p>
+          </Card>
+          <Card>
+            <p className="text-sm text-text/60">متوسط قيمة الطلب</p>
+            <p className="mt-2 text-3xl font-bold text-accent">
+              {formatPrice(sales.averageOrder)}
+            </p>
+          </Card>
+        </div>
+        <Card className="mt-6">
+          <SalesChart days={sales.days} />
+        </Card>
+      </section>
 
       <section className="mt-10">
         <h2 className="text-xl font-semibold mb-4">
