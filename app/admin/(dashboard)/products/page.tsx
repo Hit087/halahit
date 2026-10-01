@@ -12,11 +12,16 @@ export default async function AdminProductsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-3xl font-bold">المنتجات</h1>
-        <Link href="/admin/products/new">
-          <Button variant="accent">إضافة منتج</Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/admin/products/bulk">
+            <Button variant="outline">استيراد / تصدير</Button>
+          </Link>
+          <Link href="/admin/products/new">
+            <Button variant="accent">إضافة منتج</Button>
+          </Link>
+        </div>
       </div>
 
       <div className="mt-8 overflow-x-auto rounded-luxury-lg bg-white shadow-soft">
