@@ -45,7 +45,7 @@ export function ProductImportForm() {
       <input
         ref={inputRef}
         type="file"
-        accept=".csv,text/csv,text/plain"
+        accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,text/plain"
         onChange={(e) => {
           setFile(e.target.files?.[0] ?? null);
           setResult(null);
