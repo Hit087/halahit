@@ -6,9 +6,10 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { productSchema } from "@/lib/validations";
 import { parseCsv } from "@/lib/csv";
+import { parseXlsx } from "@/lib/xlsx";
 
 const MAX_ROWS = 200;
-const MAX_BYTES = 1_000_000;
+const MAX_BYTES = 2_000_000;
 
 async function guard() {
   const session = await requireAdmin();
@@ -67,17 +68,37 @@ export async function importProductsCsv(formData: FormData): Promise<Result> {
     return fail(["لم يتم اختيار ملف"]);
   }
   if (file.size > MAX_BYTES) {
-    return fail(["حجم الملف كبير (الحد الأقصى 1 ميجابايت)"]);
+    return fail(["حجم الملف كبير (الحد الأقصى 2 ميجابايت)"]);
   }
 
-  const text = await file.text();
-  if (looksGarbled(text)) {
-    return fail([
-      "الملف انحفظ بترميز غلط والعربي فيه تخرّب، فما انحفظ شي. نزّل الملف من جديد، وافتحه بتطبيق يدعم UTF-8، واحفظه بصيغة CSV UTF-8.",
-    ]);
+  const fileName = file.name.toLowerCase();
+  if (fileName.endsWith(".xls")) {
+    return fail(["صيغة xls القديمة غير مدعومة. احفظ الملف بصيغة xlsx أو CSV وارفعه."]);
   }
 
-  const rows = parseCsv(text);
+  const buf = Buffer.from(await file.arrayBuffer());
+  const isXlsx =
+    fileName.endsWith(".xlsx") || (buf.length > 3 && buf[0] === 0x50 && buf[1] === 0x4b);
+
+  let rows: string[][];
+  if (isXlsx) {
+    try {
+      rows = parseXlsx(buf);
+    } catch {
+      return fail([
+        "تعذّر قراءة ملف Excel. تأكد إنه ملف xlsx سليم، أو احفظه من جديد وارفعه.",
+      ]);
+    }
+  } else {
+    const text = buf.toString("utf8");
+    if (looksGarbled(text)) {
+      return fail([
+        "الملف انحفظ بترميز غلط والعربي فيه تخرّب، فما انحفظ شي. استخدم ملف xlsx (الأفضل)، أو احفظ الـCSV بصيغة UTF-8.",
+      ]);
+    }
+    rows = parseCsv(text);
+  }
+
   if (rows.length < 2) {
     return fail(["الملف فاضي أو ما فيه صفوف بيانات"]);
   }
