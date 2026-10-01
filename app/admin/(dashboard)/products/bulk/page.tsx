@@ -6,7 +6,7 @@ import { ProductImportForm } from "./ProductImportForm";
 export const dynamic = "force-dynamic";
 
 const COLUMNS: { key: string; note: string }[] = [
-  { key: "id", note: "معرّف المنتج. اتركه فاضي لإضافة منتج جديد، ولا تغيّره لمنتج موجود." },
+  { key: "id", note: "معرّف المنتج. اتركه فاضي لإضافة منتج جديد، ولا تغيّره لمنتج موجود. لا تحذف هذا العمود." },
   { key: "name / name_en", note: "اسم المنتج بالعربي والإنجليزي (مطلوبين)." },
   { key: "description / description_en", note: "الوصف بالعربي (مطلوب) والإنجليزي (اختياري)." },
   { key: "price", note: "السعر (اختياري)." },
@@ -29,7 +29,7 @@ export default async function BulkProductsPage() {
         <div>
           <h1 className="font-display text-3xl font-bold">استيراد وتصدير المنتجات</h1>
           <p className="mt-1 text-text/60">
-            نزّل المنتجات بملف CSV، عدّله بـExcel أو Google Sheets، وارفعه مرة ثانية.
+            نزّل المنتجات بملف Excel، عدّله بـExcel أو Google Sheets، وارفعه مرة ثانية.
           </p>
         </div>
         <Link href="/admin/products" className="text-sm text-accent hover:underline">
@@ -45,7 +45,7 @@ export default async function BulkProductsPage() {
               href="/api/admin/products/export"
               className="rounded-luxury bg-accent px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
             >
-              تنزيل كل المنتجات
+              تنزيل كل المنتجات (Excel)
             </a>
             <a
               href="/api/admin/products/export?template=1"
@@ -55,8 +55,15 @@ export default async function BulkProductsPage() {
             </a>
           </div>
           <p className="mt-4 text-sm text-text/60">
-            لما تحفظ الملف بعد التعديل، اختر صيغة <strong>CSV UTF-8</strong> عشان العربي ما
-            يتخرب. إذا فتح الملف بعمود واحد بالكمبيوتر، استخدم Data ثم From Text/CSV.
+            بعد التعديل احفظ الملف بصيغة <strong>xlsx</strong>. بتطبيق Google Sheets:
+            File ← Share &amp; export ← Save as ← Microsoft Excel (.xlsx).
+          </p>
+          <p className="mt-2 text-sm text-text/50">
+            تبغى CSV بدل Excel؟{" "}
+            <a href="/api/admin/products/export?format=csv" className="text-accent hover:underline">
+              نزّله من هنا
+            </a>
+            . بعض التطبيقات على الجوال تخرّب العربي بملفات CSV، فالأفضل xlsx.
           </p>
         </Card>
       </section>
@@ -69,7 +76,7 @@ export default async function BulkProductsPage() {
             <li>الاستيراد كله أو ولا شي: إذا فيه خطأ بأي سطر ما ينحفظ شي، وتطلع لك قائمة الأخطاء.</li>
             <li>السطر اللي فيه معرّف يحدّث المنتج الموجود. السطر بدون معرّف يضيف منتج جديد.</li>
             <li>المنتج الجديد بدون صور ينحفظ معطّل لين تضيف له صورة من صفحة التعديل.</li>
-            <li>الحد الأقصى 200 صف بالملف الواحد.</li>
+            <li>يقرأ الورقة الأولى فقط من الملف. الحد الأقصى 200 صف.</li>
             <li>إذا استخدمت القالب، احذف صف المثال قبل الرفع.</li>
           </ul>
         </Card>
