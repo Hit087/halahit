@@ -32,6 +32,19 @@ function parseBool(value: string): boolean | undefined | "invalid" {
   return "invalid";
 }
 
+// يكشف الملف اللي انقرأ بترميز غلط (العربي يطلع رموز مثل Ø§Ù)
+function looksGarbled(text: string): boolean {
+  return text.startsWith("ï»¿") || /(?:Ø|Ù)[\u0080-\u00BF]/.test(text);
+}
+
+function cleanHeader(h: string): string {
+  return h
+    .replace(/^\uFEFF/, "")
+    .replace(/^ï»¿/, "")
+    .trim()
+    .toLowerCase();
+}
+
 type Result = {
   success: boolean;
   created: number;
@@ -57,17 +70,32 @@ export async function importProductsCsv(formData: FormData): Promise<Result> {
     return fail(["حجم الملف كبير (الحد الأقصى 1 ميجابايت)"]);
   }
 
-  const rows = parseCsv(await file.text());
+  const text = await file.text();
+  if (looksGarbled(text)) {
+    return fail([
+      "الملف انحفظ بترميز غلط والعربي فيه تخرّب، فما انحفظ شي. نزّل الملف من جديد، وافتحه بتطبيق يدعم UTF-8، واحفظه بصيغة CSV UTF-8.",
+    ]);
+  }
+
+  const rows = parseCsv(text);
   if (rows.length < 2) {
     return fail(["الملف فاضي أو ما فيه صفوف بيانات"]);
   }
 
-  const headers = rows[0].map((h) => h.trim().toLowerCase());
+  const headers = rows[0].map(cleanHeader);
   const col = (name: string) => headers.indexOf(name);
   const cell = (cells: string[], name: string) => {
     const i = col(name);
     return i === -1 ? "" : (cells[i] ?? "").trim();
   };
+
+  // عمود id لازم يكون موجود (حتى لو فاضي للمنتجات الجديدة)،
+  // لأن غيابه معناه كل الصفوف تنضاف كمنتجات جديدة ويتكرر كل شي
+  if (col("id") === -1) {
+    return fail([
+      "عمود id مفقود من الملف. لا تحذفه حتى للمنتجات الجديدة، اتركه فاضي بس. نزّل الملف من جديد وعدّل عليه.",
+    ]);
+  }
 
   const missing = ["name", "name_en", "description"].filter((h) => col(h) === -1);
   if (col("category_slug") === -1 && col("category") === -1) {
