@@ -13,11 +13,13 @@ const RANGES: { key: string; days: number | null; label: string }[] = [
 ];
 
 const STATUS_LABELS: Record<string, string> = {
-  PENDING: "جديد",
+  PENDING: "قيد الانتظار",
+  CONFIRMED: "مؤكد",
+  DELIVERED: "تم التوصيل",
+  CANCELLED: "ملغي",
+  // قيم قديمة موجودة بالقاعدة وما يستخدمها الكود
   PROCESSING: "قيد التجهيز",
   SHIPPED: "تم الشحن",
-  DELIVERED: "تم التسليم",
-  CANCELLED: "ملغي",
 };
 
 function BarRow({
