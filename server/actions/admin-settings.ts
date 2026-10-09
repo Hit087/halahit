@@ -17,13 +17,28 @@ async function guard() {
   if (!session) throw new Error("غير مصرح");
 }
 
+// حقول صارت تُدار من صفحة الفوتر (لا نلمسها عند حفظ الإعدادات حتى ما تنمسح)
+const FOOTER_MANAGED_KEYS = [
+  "jahezLink",
+  "hungerStationLink",
+  "toYouLink",
+  "tiktokLink",
+  "instagramLink",
+  "snapchatLink",
+  "kitalink",
+  "theChefzLink",
+  "commercialRegNumber",
+  "commercialLicenseNumber",
+  "commercialRegVisible",
+] as const;
+
 export async function updateSettings(formData: FormData) {
   await guard();
 
   const logoFile = formData.get("logo");
   const existing = await prisma.settings.findUnique({ where: { id: "default" } });
-  let logo = existing?.logo ?? undefined;
 
+  let logo = existing?.logo ?? undefined;
   if (logoFile instanceof File && logoFile.size > 0) {
     logo = await saveUploadedFile(logoFile);
   }
@@ -34,20 +49,21 @@ export async function updateSettings(formData: FormData) {
     whatsappNumber: formData.get("whatsappNumber"),
     logo,
     mapLink: formData.get("mapLink") || "",
-    jahezLink: formData.get("jahezLink") || "",
-    hungerStationLink: formData.get("hungerStationLink") || "",
-    toYouLink: formData.get("toYouLink") || "",
-    tiktokLink: formData.get("tiktokLink") || "",
-    instagramLink: formData.get("instagramLink") || "",
-    snapchatLink: formData.get("snapchatLink") || "",
-    kitalink: formData.get("kitalink") || "",
-    theChefzLink: formData.get("theChefzLink") || "",
     vatEnabled: formData.getAll("vatEnabled").includes("true"),
-    commercialRegNumber: formData.get("commercialRegNumber") || "",
-    commercialLicenseNumber: formData.get("commercialLicenseNumber") || "",
-    commercialRegVisible: formData.getAll("commercialRegVisible").includes("true"),
-    // ==== إضافة جديدة ====
     onlinePaymentEnabled: formData.getAll("onlinePaymentEnabled").includes("true"),
+
+    // قيم فارغة فقط عشان تمر من فحص الـschema، ولا تُحفظ (تُحذف قبل الحفظ تحت)
+    jahezLink: "",
+    hungerStationLink: "",
+    toYouLink: "",
+    tiktokLink: "",
+    instagramLink: "",
+    snapchatLink: "",
+    kitalink: "",
+    theChefzLink: "",
+    commercialRegNumber: "",
+    commercialLicenseNumber: "",
+    commercialRegVisible: false,
   };
 
   const parsed = settingsSchema.safeParse(raw);
@@ -60,18 +76,13 @@ export async function updateSettings(formData: FormData) {
   const data: Record<string, unknown> = {
     ...parsed.data,
     mapLink: nullableLink(parsed.data.mapLink),
-    jahezLink: nullableLink(parsed.data.jahezLink),
-    hungerStationLink: nullableLink(parsed.data.hungerStationLink),
-    toYouLink: nullableLink(parsed.data.toYouLink),
-    tiktokLink: nullableLink(parsed.data.tiktokLink),
-    instagramLink: nullableLink(parsed.data.instagramLink),
-    snapchatLink: nullableLink(parsed.data.snapchatLink),
-    kitalink: nullableLink(parsed.data.kitalink),
-    theChefzLink: nullableLink(parsed.data.theChefzLink),
-    commercialRegNumber: nullableLink(parsed.data.commercialRegNumber),
-    commercialLicenseNumber: nullableLink(parsed.data.commercialLicenseNumber),
     logo: parsed.data.logo || logo || null,
   };
+
+  // نشيل الحقول اللي تُدار من الفوتر، عشان حفظ الإعدادات ما يمسحها
+  for (const key of FOOTER_MANAGED_KEYS) {
+    delete data[key];
+  }
 
   const newPassword = formData.get("newPassword");
   const confirmPassword = formData.get("confirmPassword");
@@ -86,6 +97,7 @@ export async function updateSettings(formData: FormData) {
       newPassword,
       confirmPassword,
     });
+
     if (!passwordParsed.success) {
       return {
         success: false,
@@ -116,6 +128,7 @@ export async function updateSettings(formData: FormData) {
 
   revalidatePath("/");
   revalidatePath("/admin/settings");
+
   return { success: true };
 }
 
@@ -150,6 +163,7 @@ export async function updateHeroSlides(slidesJson: string) {
 
   revalidatePath("/");
   revalidatePath("/admin/settings");
+
   return { success: true };
 }
 
