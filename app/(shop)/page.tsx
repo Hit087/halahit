@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { HeroCarousel } from "@/components/home/HeroCarousel";
 import { ProductCard } from "@/components/products/ProductCard";
@@ -7,6 +8,10 @@ import {
   getFeaturedProducts,
   getCategoriesWithProducts,
 } from "@/server/queries";
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 export default async function HomePage() {
   const [settings, featured, categoriesWithProducts] = await Promise.all([
@@ -52,12 +57,9 @@ export default async function HomePage() {
         >
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
             <div className="mb-5 flex items-center justify-between">
-              <div>
-                <h2 className="text-xl sm:text-2xl font-bold text-text">
-                  {category.name}
-                </h2>
-                <p className="mt-0.5 text-xs text-text/50">{category.nameEn}</p>
-              </div>
+              <h2 className="text-xl sm:text-2xl font-bold text-text">
+                {category.name}
+              </h2>
               <Link
                 href={`/products?category=${category.slug}`}
                 className="text-sm font-medium text-accent transition hover:underline"
