@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Badge } from "@/components/ui/Badge";
 import { FooterItemForm } from "./FooterItemForm";
 import { DeleteFooterItemButton } from "./DeleteFooterItemButton";
+import { CommercialInfoForm } from "./CommercialInfoForm";
 
 const sections: { key: string; title: string; hint: string }[] = [
   { key: "SOCIAL", title: "التواصل الاجتماعي", hint: "أيقونات فيسبوك، سناب، انستقرام..." },
@@ -13,7 +14,10 @@ const sections: { key: string; title: string; hint: string }[] = [
 ];
 
 export default async function AdminFooterPage() {
-  const items = await prisma.footerItem.findMany({ orderBy: { sortOrder: "asc" } });
+  const [items, settings] = await Promise.all([
+    prisma.footerItem.findMany({ orderBy: { sortOrder: "asc" } }),
+    prisma.settings.findUnique({ where: { id: "default" } }),
+  ]);
 
   return (
     <div>
@@ -23,6 +27,21 @@ export default async function AdminFooterPage() {
       </p>
 
       <div className="space-y-12">
+        {/* ==== السجل التجاري والترخيص (نُقل من الإعدادات) ==== */}
+        <div>
+          <h2 className="text-lg font-semibold">السجل التجاري والترخيص</h2>
+          <p className="mb-4 text-xs text-text/50">
+            يظهر أسفل الموقع (تحت حقوق النشر) عند تفعيل خيار الإظهار
+          </p>
+          <div className="max-w-xl rounded-luxury-lg bg-white p-4 shadow-soft">
+            <CommercialInfoForm
+              commercialRegNumber={settings?.commercialRegNumber ?? null}
+              commercialLicenseNumber={settings?.commercialLicenseNumber ?? null}
+              commercialRegVisible={settings?.commercialRegVisible ?? false}
+            />
+          </div>
+        </div>
+
         {sections.map((sec) => {
           const sectionItems = items.filter((i) => i.section === sec.key);
           return (
