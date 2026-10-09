@@ -30,6 +30,9 @@ export default async function ShopLayout({
     }),
   ]);
 
+  // السجل التجاري والترخيص يظهرون فقط إذا فعّلت خيار العرض من الإعدادات
+  const showCommercial = Boolean(settings?.commercialRegVisible);
+
   return (
     <div className="flex min-h-screen flex-col">
       <AnnouncementBarDisplay
@@ -47,6 +50,10 @@ export default async function ShopLayout({
         tagline={settings?.tagline ?? "أكل قطعة ذكرى"}
         pages={pages}
         footerItems={footerItems}
+        commercialRegNumber={showCommercial ? settings?.commercialRegNumber ?? null : null}
+        commercialLicenseNumber={
+          showCommercial ? settings?.commercialLicenseNumber ?? null : null
+        }
       />
     </div>
   );
