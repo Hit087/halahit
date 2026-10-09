@@ -3,13 +3,23 @@ import type { Metadata } from "next";
 import {
   getProductById,
   getRelatedProducts,
+  getSettings,
 } from "@/server/queries";
 import { ProductDetailClient } from "./ProductDetailClient";
 import { ProductReviews } from "./ProductReviews";
 import { ProductCard } from "@/components/products/ProductCard";
 import { trackEvent } from "@/server/analytics";
 
-// ==================== إضافة جديدة: عنوان ووصف مخصص لكل منتج (SEO) ====================
+// يقص الوصف عند آخر كلمة كاملة بدل ما ينقطع بنص الكلمة
+function makeDescription(text: string, max = 155) {
+  const clean = text.replace(/\s+/g, " ").trim();
+  if (clean.length <= max) return clean;
+  const cut = clean.slice(0, max);
+  const lastSpace = cut.lastIndexOf(" ");
+  return `${cut.slice(0, lastSpace > 100 ? lastSpace : max).trim()}…`;
+}
+
+// ==================== عنوان ووصف وcanonical مخصص لكل منتج (SEO) ====================
 export async function generateMetadata({
   params,
 }: {
@@ -18,15 +28,18 @@ export async function generateMetadata({
   const product = await getProductById(params.id);
   if (!product) return {};
 
-  const description = product.description.slice(0, 160);
+  const description = makeDescription(product.description);
   const image = product.images[0]?.url;
+  const canonical = `/products/${product.id}`;
 
   return {
     title: product.name,
     description,
+    alternates: { canonical },
     openGraph: {
       title: product.name,
       description,
+      url: canonical,
       images: image ? [{ url: image }] : undefined,
       type: "website",
     },
@@ -48,15 +61,45 @@ export default async function ProductDetailPage({
 
   await trackEvent("PRODUCT_VIEW", `/products/${params.id}`, product.id);
 
-  const related = await getRelatedProducts(
-    product.categoryId,
-    product.id,
-    4
-  );
+  const [related, settings] = await Promise.all([
+    getRelatedProducts(product.categoryId, product.id, 4),
+    getSettings(),
+  ]);
+
+  // بيانات هيكلية للمنتج (تساعد قوقل يعرض السعر والصورة بنتائج البحث)
+  const hasPrice = typeof product.price === "number" && product.price > 0;
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: makeDescription(product.description, 300),
+    sku: product.id,
+    image: product.images.map((i) => i.url),
+    brand: { "@type": "Brand", name: "هيت" },
+    ...(hasPrice
+      ? {
+          offers: {
+            "@type": "Offer",
+            price: product.price,
+            priceCurrency: "SAR",
+            availability: "https://schema.org/InStock",
+            url: `https://halahit.onrender.com/products/${product.id}`,
+          },
+        }
+      : {}),
+  };
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
-      <ProductDetailClient product={product} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+      />
+
+      <ProductDetailClient
+        product={product}
+        whatsappNumber={settings?.whatsappNumber ?? null}
+      />
 
       <ProductReviews productId={product.id} />
 
