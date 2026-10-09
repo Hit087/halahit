@@ -3,32 +3,40 @@ import { ProductCard } from "@/components/products/ProductCard";
 import { getProducts, getActiveCategories } from "@/server/queries";
 import Link from "next/link";
 
-// ==================== إضافة جديدة: عنوان ووصف مستهدف جغرافيًا لصفحة المنتجات ====================
+// ==================== عنوان ووصف مستهدف جغرافيًا لصفحة المنتجات + canonical صحيح ====================
 export async function generateMetadata({
   searchParams,
 }: {
   searchParams: { category?: string; q?: string };
 }): Promise<Metadata> {
+  // نتائج البحث ما تنفهرس، وcanonical حقها صفحة المنتجات الأساسية
+  if (searchParams.q) {
+    return {
+      title: `نتائج البحث عن "${searchParams.q}"`,
+      alternates: { canonical: "/products" },
+      robots: { index: false, follow: true },
+    };
+  }
+
   if (searchParams.category) {
     const categories = await getActiveCategories();
     const category = categories.find((c) => c.slug === searchParams.category);
     if (category) {
       return {
-        title: `${category.name} — توصيل الرياض`,
-        description: `تسوّق ${category.name} من هيت مع توصيل سريع لكل أحياء الرياض.`,
+        title: `${category.name} — الرياض`,
+        description: `تسوّق ${category.name} من هيت في الرياض، استلام من الفرع أو عبر تطبيقات التوصيل.`,
+        alternates: {
+          canonical: `/products?category=${encodeURIComponent(category.slug)}`,
+        },
       };
     }
   }
 
-  if (searchParams.q) {
-    return {
-      title: `نتائج البحث عن "${searchParams.q}"`,
-    };
-  }
-
   return {
     title: "كل المنتجات — حلويات وبوكسات هدايا في الرياض",
-    description: "تصفّح كل منتجات هيت: حلويات، بوكسات تجمعات، قهوة، وهدايا فاخرة مع توصيل داخل الرياض.",
+    description:
+      "تصفّح كل منتجات هيت: حلويات، بوكسات تجمعات، قهوة، وهدايا فاخرة في الرياض، استلام من الفرع أو عبر تطبيقات التوصيل.",
+    alternates: { canonical: "/products" },
   };
 }
 
