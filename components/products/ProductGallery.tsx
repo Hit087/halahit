@@ -6,7 +6,13 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const ZOOM_SCALE = 2.5;
 
-export function ProductGallery({ images }: { images: { url: string }[] }) {
+export function ProductGallery({
+  images,
+  alt = "",
+}: {
+  images: { url: string }[];
+  alt?: string;
+}) {
   const [active, setActive] = useState(0);
   const [open, setOpen] = useState(false);
   const [zoomed, setZoomed] = useState(false);
@@ -76,7 +82,7 @@ export function ProductGallery({ images }: { images: { url: string }[] }) {
           >
             <Image
               src={urls[active]}
-              alt="Product"
+              alt={alt}
               fill
               className="object-cover"
               sizes="(max-width: 768px) 100vw, 50vw"
@@ -123,7 +129,7 @@ export function ProductGallery({ images }: { images: { url: string }[] }) {
                 i === active ? "border-accent" : "border-transparent opacity-70 hover:opacity-100"
               }`}
             >
-              <Image src={url} alt="" fill className="object-cover" sizes="80px" />
+              <Image src={url} alt={alt ? `${alt} ${i + 1}` : ""} fill className="object-cover" sizes="80px" />
             </button>
           ))}
         </div>
@@ -183,7 +189,7 @@ export function ProductGallery({ images }: { images: { url: string }[] }) {
               >
                 <Image
                   src={urls[active]}
-                  alt="Product"
+                  alt={alt}
                   fill
                   draggable={false}
                   quality={90}
