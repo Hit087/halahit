@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/Button";
@@ -30,6 +31,13 @@ export function SettingsForm({ settings }: { settings: Settings | null }) {
   return (
     <Card className="max-w-2xl">
       <h2 className="font-semibold text-lg mb-4">إعدادات المتجر</h2>
+      <p className="mb-4 rounded-luxury bg-cream p-3 text-sm text-text/70">
+        روابط التواصل الاجتماعي وتطبيقات التوصيل والسجل التجاري والترخيص تُدار الآن من{" "}
+        <Link href="/admin/footer" className="font-medium text-accent hover:underline">
+          صفحة الفوتر
+        </Link>
+        .
+      </p>
       <form onSubmit={handleSubmit} className="space-y-4" encType="multipart/form-data">
         <Input name="storeName" label="اسم المتجر" defaultValue={settings?.storeName} required />
         <Input name="tagline" label="الشعار" defaultValue={settings?.tagline} />
@@ -40,6 +48,7 @@ export function SettingsForm({ settings }: { settings: Settings | null }) {
           required
           placeholder="966500000000"
         />
+
         <div>
           <label className="text-sm font-medium">الشعار (Logo)</label>
           {settings?.logo && (
@@ -49,31 +58,8 @@ export function SettingsForm({ settings }: { settings: Settings | null }) {
           )}
           <input type="file" name="logo" accept="image/*" className="mt-1 w-full text-sm" />
         </div>
+
         <Input name="mapLink" label="رابط الخريطة" defaultValue={settings?.mapLink ?? ""} />
-        <Input name="jahezLink" label="رابط جاهز" defaultValue={settings?.jahezLink ?? ""} />
-        <Input
-          name="hungerStationLink"
-          label="رابط هنقرستيشن"
-          defaultValue={settings?.hungerStationLink ?? ""}
-        />
-        <Input name="toYouLink" label="رابط ToYou" defaultValue={settings?.toYouLink ?? ""} />
-        <Input name="tiktokLink" label="رابط تيك توك" defaultValue={settings?.tiktokLink ?? ""} />
-        <Input
-          name="instagramLink"
-          label="رابط إنستقرام"
-          defaultValue={settings?.instagramLink ?? ""}
-        />
-        <Input
-          name="snapchatLink"
-          label="رابط سناب شات"
-          defaultValue={settings?.snapchatLink ?? ""}
-        />
-        <Input name="kitalink" label="رابط كيتا" defaultValue={settings?.kitalink ?? ""} />
-        <Input
-          name="theChefzLink"
-          label="رابط ذا شيفز"
-          defaultValue={settings?.theChefzLink ?? ""}
-        />
 
         <div className="border-t border-beige pt-4 mt-6">
           <h3 className="font-semibold mb-3">الضريبة</h3>
@@ -89,33 +75,7 @@ export function SettingsForm({ settings }: { settings: Settings | null }) {
           </label>
         </div>
 
-        <div className="border-t border-beige pt-4 mt-6">
-          <h3 className="font-semibold mb-3">السجل التجاري والرخصة</h3>
-          <div className="space-y-4">
-            <Input
-              name="commercialRegNumber"
-              label="رقم السجل التجاري"
-              defaultValue={settings?.commercialRegNumber ?? ""}
-            />
-            <Input
-              name="commercialLicenseNumber"
-              label="رقم الرخصة"
-              defaultValue={settings?.commercialLicenseNumber ?? ""}
-            />
-            <label className="flex items-center gap-2 text-sm">
-              <input type="hidden" name="commercialRegVisible" value="false" />
-              <input
-                type="checkbox"
-                name="commercialRegVisible"
-                value="true"
-                defaultChecked={settings?.commercialRegVisible ?? false}
-              />
-              إظهار السجل التجاري والرخصة بتذييل الموقع
-            </label>
-          </div>
-        </div>
-
-        {/* ==== إضافة جديدة: تفعيل الدفع الإلكتروني (ميسر) ==== */}
+        {/* ==== تفعيل الدفع الإلكتروني (ميسر) ==== */}
         <div className="border-t border-beige pt-4 mt-6">
           <h3 className="font-semibold mb-3">الدفع الإلكتروني (ميسر)</h3>
           <p className="mb-3 text-sm text-text/60">
@@ -155,6 +115,7 @@ export function SettingsForm({ settings }: { settings: Settings | null }) {
         </div>
 
         {error && <p className="text-red-500 text-sm">{error}</p>}
+
         <Button type="submit" variant="accent" loading={loading}>
           حفظ الإعدادات
         </Button>
