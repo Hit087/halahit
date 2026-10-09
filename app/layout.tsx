@@ -43,13 +43,15 @@ const SITE_URL = "https://halahit.onrender.com";
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await safeGetSettings();
 
+  // ملاحظة: الـcanonical ما نحطه هنا. كل صفحة تحدد الـcanonical الخاص فيها،
+  // لأن وضعه هنا كان يخلي كل الصفحات تشير للصفحة الرئيسية.
   return {
     metadataBase: new URL(SITE_URL),
     title: {
       default: `${settings.storeName} — حلويات وبوكسات هدايا وتجمعات في الرياض`,
       template: `%s | ${settings.storeName}`,
     },
-    description: `${settings.tagline} — متجر هيت لحلويات وقهوة وبوكسات تجمعات وهدايا فاخرة في الرياض، توصيل لكل أحياء الرياض.`,
+    description: `${settings.tagline} — متجر هيت لحلويات وقهوة وبوكسات تجمعات وهدايا فاخرة في الرياض، استلام من الفرع أو توصيل عبر تطبيقات التوصيل.`,
     // ==== تعديل: كلمات مفتاحية أوسع ومستهدفة جغرافيًا (الرياض) ====
     keywords: [
       "هيت",
@@ -83,16 +85,12 @@ export async function generateMetadata(): Promise<Metadata> {
       siteName: settings.storeName,
       title: `${settings.storeName} — حلويات وبوكسات هدايا في الرياض`,
       description: settings.tagline,
-      url: SITE_URL,
       images: settings.logo ? [{ url: settings.logo }] : undefined,
     },
     twitter: {
       card: "summary_large_image",
       title: settings.storeName,
       description: settings.tagline,
-    },
-    alternates: {
-      canonical: SITE_URL,
     },
   };
 }
