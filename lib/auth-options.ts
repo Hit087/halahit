@@ -41,10 +41,20 @@ function recordFailure(key: string, limit: number, now: number) {
 }
 
 function clientIp(headers: Record<string, unknown> | undefined): string {
-  const forwarded = headers?.["x-forwarded-for"];
-  const raw = Array.isArray(forwarded) ? forwarded[0] : forwarded;
-  const real = headers?.["x-real-ip"];
-  const value = (raw ?? real ?? "unknown") as string;
+  const pick = (name: string): string | undefined => {
+    const v = headers?.[name];
+    const first = Array.isArray(v) ? v[0] : v;
+    return typeof first === "string" && first.trim() ? first : undefined;
+  };
+
+  // ترويسات Cloudflare ما تنزور من المستخدم، فنفضّلها على x-forwarded-for
+  const value =
+    pick("cf-connecting-ip") ??
+    pick("true-client-ip") ??
+    pick("x-forwarded-for") ??
+    pick("x-real-ip") ??
+    "unknown";
+
   return String(value).split(",")[0].trim() || "unknown";
 }
 
