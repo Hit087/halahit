@@ -9,10 +9,22 @@ import { trackEvent } from "@/server/analytics";
 import { getSession } from "@/lib/auth";
 import { sendOrderConfirmationEmail } from "@/lib/email";
 import { createMoyasarInvoice, isMoyasarConfigured } from "@/lib/moyasar";
+import { getClientIp, rateLimit } from "@/lib/rate-limit";
 
 const VAT_RATE = 0.15;
+const MAX_ITEMS = 50;
+const MAX_QUANTITY = 99;
 
 export async function processCheckout(data: unknown) {
+  // ==== حماية من إغراق الطلبات (سبام) ====
+  const ip = getClientIp();
+  if (!rateLimit(`checkout:${ip}`, 5, 10 * 60 * 1000)) {
+    return {
+      success: false as const,
+      error: "طلبات كثيرة خلال وقت قصير، الرجاء المحاولة بعد قليل",
+    };
+  }
+
   const parsed = checkoutSchema.safeParse(data);
   if (!parsed.success) {
     return { success: false as const, error: "بيانات الطلب غير صالحة" };
@@ -29,12 +41,29 @@ export async function processCheckout(data: unknown) {
     items,
   } = parsed.data;
 
+  // ==== حدود منطقية للسلة ====
+  if (
+    items.length === 0 ||
+    items.length > MAX_ITEMS ||
+    items.some(
+      (i) => !Number.isInteger(i.quantity) || i.quantity < 1 || i.quantity > MAX_QUANTITY
+    )
+  ) {
+    return { success: false as const, error: "بيانات السلة غير صالحة" };
+  }
+
+  // رابط الموقع لازم يكون رابط ويب فقط (يمنع javascript: وغيره)
+  if (locationLink && !/^https?:\/\//i.test(locationLink)) {
+    return { success: false as const, error: "رابط الموقع غير صالح" };
+  }
+
   const fulfillmentMethod = await prisma.fulfillmentMethod.findFirst({
     where: { id: fulfillmentMethodId, active: true },
   });
   if (!fulfillmentMethod) {
     return { success: false as const, error: "طريقة الاستلام غير متاحة" };
   }
+
   if (fulfillmentMethod.type === "DELIVERY" && !locationLink) {
     return {
       success: false as const,
@@ -53,8 +82,9 @@ export async function processCheckout(data: unknown) {
     where: { id: "default" },
   });
 
-  // ==== تعديل: بوابة الدفع تُفعّل فقط لو مضاف مفتاح ميسر الحقيقي + مفعّلة من الإعدادات ====
+  // ==== بوابة الدفع تُفعّل فقط لو مضاف مفتاح ميسر الحقيقي + مفعّلة من الإعدادات ====
   const gatewayReady = isMoyasarConfigured() && (settings?.onlinePaymentEnabled ?? false);
+
   if (paymentMethod.type === "GATEWAY" && !gatewayReady) {
     return {
       success: false as const,
@@ -70,6 +100,15 @@ export async function processCheckout(data: unknown) {
 
   if (products.length !== productIds.length) {
     return { success: false as const, error: "بعض المنتجات غير متوفرة" };
+  }
+
+  // ==== المنتج اللي سعره "حسب الطلب" ما ينطلب من السلة (كان يدخل بسعر صفر) ====
+  const unpriced = products.find((p) => p.price === null || Number(p.price) <= 0);
+  if (unpriced) {
+    return {
+      success: false as const,
+      error: `المنتج "${unpriced.name}" سعره حسب الطلب، الرجاء التواصل معنا عبر واتساب`,
+    };
   }
 
   for (const item of items) {
@@ -107,13 +146,16 @@ export async function processCheckout(data: unknown) {
     const coupon = await prisma.coupon.findUnique({
       where: { code: couponCode.toUpperCase() },
     });
+
     if (!coupon) {
       return { success: false as const, error: "كود الخصم غير صالح" };
     }
+
     const result = calculateDiscount(coupon, subtotal);
     if (!result.valid) {
       return { success: false as const, error: result.message ?? "كوبون غير صالح" };
     }
+
     discount = result.discount;
     appliedCoupon = coupon.code;
   }
@@ -205,7 +247,7 @@ export async function processCheckout(data: unknown) {
     });
   }
 
-  // ==== إضافة جديدة: لو طريقة الدفع بوابة إلكترونية جاهزة فعليًا، نوديه لصفحة الدفع بدل واتساب ====
+  // ==== لو طريقة الدفع بوابة إلكترونية جاهزة فعليًا، نوديه لصفحة الدفع بدل واتساب ====
   if (paymentMethod.type === "GATEWAY" && gatewayReady) {
     const invoiceResult = await createMoyasarInvoice({
       amount: total,
