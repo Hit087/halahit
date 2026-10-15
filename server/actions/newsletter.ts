@@ -4,9 +4,17 @@ import { prisma } from "@/lib/prisma";
 import { newsletterSchema } from "@/lib/validations";
 import { sendNewsletterWelcomeEmail, sendCampaignEmail } from "@/lib/email";
 import { requireAdmin } from "@/lib/auth";
+import { getClientIp, rateLimit } from "@/lib/rate-limit";
 
 export async function subscribeNewsletter(formData: FormData) {
+  // يمنع إغراق صناديق الناس برسائل الترحيب (سبام) ويحمي سمعة إرسال الإيميل
+  const ip = getClientIp();
+  if (!rateLimit(`newsletter:${ip}`, 5, 60 * 60 * 1000)) {
+    return { success: false, error: "محاولات كثيرة، الرجاء المحاولة لاحقًا" };
+  }
+
   const raw = { email: formData.get("email") };
+
   const parsed = newsletterSchema.safeParse(raw);
   if (!parsed.success) {
     return { success: false, error: "بريد إلكتروني غير صالح" };
@@ -25,7 +33,7 @@ export async function subscribeNewsletter(formData: FormData) {
   return { success: true, error: undefined as string | undefined };
 }
 
-// ==================== إضافة جديدة: إرسال حملة جماعية للمشتركين (أدمن فقط) ====================
+// ==================== إرسال حملة جماعية للمشتركين (أدمن فقط) ====================
 export async function sendNewsletterCampaign(subject: string, message: string) {
   const session = await requireAdmin();
   if (!session) {
