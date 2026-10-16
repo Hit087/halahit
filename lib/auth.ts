@@ -15,7 +15,6 @@ export async function requireAdmin() {
   }
 
   const session = await getSession();
-
   if (!session?.user?.email) {
     return null;
   }
@@ -29,5 +28,14 @@ export async function requireAdmin() {
     return null;
   }
 
+  return session;
+}
+
+// ==== التحقق من دخول عميل (أي حساب مسجّل، مو بالضرورة الأدمن) ====
+export async function requireCustomer() {
+  const session = await getSession();
+  if (!session?.user?.email) {
+    return null;
+  }
   return session;
 }
