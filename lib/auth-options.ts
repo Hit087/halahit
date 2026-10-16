@@ -37,7 +37,11 @@ function recordFailure(key: string, limit: number, now: number) {
     return;
   }
   a.count += 1;
-  if (a.count >= limit) a.lockedUntil = now + LOCK_MS;
+  if (a.count >= limit && a.lockedUntil <= now) {
+    a.lockedUntil = now + LOCK_MS;
+    // نسجّل الـIP بس (بدون الإيميل) عشان نقدر نتأكد من اشتغال الحماية من سجلات Render
+    console.warn(`[auth] تم حظر تسجيل الدخول مؤقتًا بعد محاولات فاشلة متكررة (${key.split("|")[0]})`);
+  }
 }
 
 function clientIp(headers: Record<string, unknown> | undefined): string {
@@ -67,20 +71,34 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials, req) {
-        const parsed = loginSchema.safeParse(credentials);
-        if (!parsed.success) return null;
-
-        const { email, password } = parsed.data;
-        const normalizedEmail = email.toLowerCase();
-
         const now = Date.now();
         cleanup(now);
         const ip = clientIp(req?.headers as Record<string, unknown> | undefined);
-        const accountKey = `acct:${ip}|${normalizedEmail}`;
+
+        // نبني المفاتيح قبل فحص صيغة المدخلات، عشان كل محاولة فاشلة تنحسب
+        // (حتى لو كلمة المرور قصيرة وانرفضت من الفحص الأولي)
+        const rawEmail = String(credentials?.email ?? "")
+          .trim()
+          .toLowerCase()
+          .slice(0, 200);
+        const accountKey = `acct:${ip}|${rawEmail}`;
         const ipKey = `ip:${ip}`;
 
         // محظور مؤقتًا: نرفض بدون ما نفحص كلمة المرور أصلًا
-        if (isLocked(accountKey, now) || isLocked(ipKey, now)) return null;
+        if (isLocked(accountKey, now) || isLocked(ipKey, now)) {
+          console.warn(`[auth] محاولة دخول أثناء الحظر المؤقت من ${ip}`);
+          return null;
+        }
+
+        const parsed = loginSchema.safeParse(credentials);
+        if (!parsed.success) {
+          recordFailure(accountKey, MAX_FAILS_PER_ACCOUNT, now);
+          recordFailure(ipKey, MAX_FAILS_PER_IP, now);
+          return null;
+        }
+
+        const { email, password } = parsed.data;
+        const normalizedEmail = email.toLowerCase();
 
         const user = await prisma.user.findUnique({
           where: { email: normalizedEmail },
