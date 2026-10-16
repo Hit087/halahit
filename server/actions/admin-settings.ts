@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin, ADMIN_EMAIL } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import {
   settingsSchema,
   heroSlideSchema,
@@ -15,6 +15,7 @@ import type { HeroSlide } from "@/types";
 async function guard() {
   const session = await requireAdmin();
   if (!session) throw new Error("غير مصرح");
+  return session;
 }
 
 // حقول صارت تُدار من صفحة الفوتر (لا نلمسها عند حفظ الإعدادات حتى ما تنمسح)
@@ -33,7 +34,7 @@ const FOOTER_MANAGED_KEYS = [
 ] as const;
 
 export async function updateSettings(formData: FormData) {
-  await guard();
+  const session = await guard();
 
   const logoFile = formData.get("logo");
   const existing = await prisma.settings.findUnique({ where: { id: "default" } });
@@ -108,15 +109,15 @@ export async function updateSettings(formData: FormData) {
     const passwordHash = await bcrypt.hash(passwordParsed.data.newPassword, 12);
     data.adminPassword = passwordHash;
 
-    await prisma.user.upsert({
-      where: { email: ADMIN_EMAIL.toLowerCase() },
-      update: { passwordHash },
-      create: {
-        email: ADMIN_EMAIL.toLowerCase(),
-        passwordHash,
-        name: "Admin",
-        role: "ADMIN",
-      },
+    // نحدّث كلمة مرور الأدمن المسجّل دخوله فقط (بدون إنشاء مستخدمين جدد)
+    const adminEmail = session.user?.email?.toLowerCase();
+    if (!adminEmail) {
+      return { success: false, error: "تعذّر تحديد حساب الأدمن" };
+    }
+
+    await prisma.user.update({
+      where: { email: adminEmail },
+      data: { passwordHash },
     });
   }
 
