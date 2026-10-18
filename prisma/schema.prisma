@@ -20,6 +20,10 @@ model User {
   name         String?
   phone        String?
   role         Role     @default(CUSTOMER)
+
+  // يزيد كل ما تتغير كلمة المرور أو يطلب العميل تسجيل الخروج من كل الأجهزة، وبهذا تبطل كل الجلسات القديمة
+  sessionVersion Int @default(0)
+
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
