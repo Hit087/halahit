@@ -138,6 +138,8 @@ export async function resetPassword(formData: FormData) {
       passwordHash,
       resetToken: null,
       resetTokenExpiry: null,
+      // استرجاع كلمة المرور يبطل كل الجلسات القديمة
+      sessionVersion: { increment: 1 },
     },
   });
 
