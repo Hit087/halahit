@@ -116,12 +116,15 @@ export const authOptions: NextAuthOptions = {
         // نجح الدخول: نصفّر عدّاد الحساب
         attempts.delete(accountKey);
 
-        return {
+        // نحط البيانات بمتغير أول (بدل إرجاعها مباشرة) عشان TypeScript ما يعترض على الحقل الإضافي
+        const authUser = {
           id: user.id,
           email: user.email,
           name: user.name ?? "",
           role: user.role,
+          sessionVersion: user.sessionVersion,
         };
+        return authUser;
       },
     }),
   ],
@@ -138,6 +141,8 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.email = user.email;
         token.role = (user as { role?: string }).role ?? "CUSTOMER";
+        // رقم نسخة الجلسة وقت الدخول. لو تغيّر بالقاعدة، الجلسة القديمة تبطل
+        token.sv = (user as { sessionVersion?: number }).sessionVersion ?? 0;
       }
       return token;
     },
@@ -146,6 +151,8 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string;
         session.user.email = token.email as string;
         (session.user as { role?: string }).role = token.role as string;
+        (session.user as { sv?: number }).sv =
+          typeof token.sv === "number" ? token.sv : 0;
       }
       return session;
     },
