@@ -18,12 +18,20 @@ export default async function AdminDashboardPage() {
           <h1 className="font-display text-3xl font-bold">لوحة التحكم</h1>
           <p className="mt-1 text-text/60">مرحباً بك في إدارة Hit</p>
         </div>
-        <Link
-          href="/admin/stats"
-          className="rounded-luxury bg-primary px-4 py-2 text-sm font-medium text-text transition hover:opacity-90"
-        >
-          إحصائيات الطلبات التفصيلية
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/admin/stats"
+            className="rounded-luxury bg-primary px-4 py-2 text-sm font-medium text-text transition hover:opacity-90"
+          >
+            إحصائيات الطلبات التفصيلية
+          </Link>
+          <a
+            href="/api/admin/backup/export"
+            className="rounded-luxury bg-cream px-4 py-2 text-sm font-medium text-text transition hover:bg-beige/60"
+          >
+            نسخة احتياطية (Excel)
+          </a>
+        </div>
       </div>
 
       <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
