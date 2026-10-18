@@ -1,12 +1,31 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "./auth-options";
+import { prisma } from "./prisma";
 
 // بريد الأدمن من متغير البيئة ADMIN_EMAIL فقط (ما نكتبه بالكود).
 // لو المتغير مو مضبوط، ما أحد يُعتبر أدمن.
 export const ADMIN_EMAIL = (process.env.ADMIN_EMAIL ?? "").trim();
 
+// الجلسة الصالحة فقط: نقارن رقم نسخة الجلسة بالقاعدة.
+// لو تغيّرت كلمة المرور أو انحذف الحساب أو طلب المستخدم الخروج من كل الأجهزة،
+// الجلسات القديمة ترجع null ويُعتبر صاحبها غير مسجّل دخول.
 export async function getSession() {
-  return getServerSession(authOptions);
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id;
+  if (!session || !userId) return null;
+
+  const tokenVersion = (session.user as { sv?: number }).sv ?? 0;
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { sessionVersion: true },
+  });
+
+  if (!user || user.sessionVersion !== tokenVersion) {
+    return null;
+  }
+
+  return session;
 }
 
 export async function requireAdmin() {
