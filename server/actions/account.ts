@@ -114,7 +114,13 @@ export async function changeEmail(formData: FormData): Promise<Result> {
 
   await prisma.user.update({
     where: { id: user.id },
-    data: { email: newEmail, resetToken: null, resetTokenExpiry: null },
+    data: {
+      email: newEmail,
+      resetToken: null,
+      resetTokenExpiry: null,
+      // يبطل كل الجلسات القديمة بكل الأجهزة
+      sessionVersion: { increment: 1 },
+    },
   });
 
   revalidatePath("/account");
@@ -162,7 +168,30 @@ export async function changePassword(formData: FormData): Promise<Result> {
   const passwordHash = await bcrypt.hash(next, 12);
   await prisma.user.update({
     where: { id: user.id },
-    data: { passwordHash, resetToken: null, resetTokenExpiry: null },
+    data: {
+      passwordHash,
+      resetToken: null,
+      resetTokenExpiry: null,
+      // يبطل كل الجلسات القديمة بكل الأجهزة (حتى لو أحد سرق جلسة قديمة)
+      sessionVersion: { increment: 1 },
+    },
+  });
+
+  return { success: true };
+}
+
+// ==================== تسجيل الخروج من كل الأجهزة ====================
+export async function signOutEverywhere(): Promise<Result> {
+  const user = await currentUser();
+  if (!user) return NOT_LOGGED_IN;
+
+  if (!rateLimit(`signout-all:${user.id}`, 5, HOUR_MS)) {
+    return { success: false, error: "محاولات كثيرة، الرجاء المحاولة لاحقًا" };
+  }
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { sessionVersion: { increment: 1 } },
   });
 
   return { success: true };
