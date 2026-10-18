@@ -117,7 +117,8 @@ export async function updateSettings(formData: FormData) {
 
     await prisma.user.update({
       where: { email: adminEmail },
-      data: { passwordHash },
+      // تغيير كلمة مرور الأدمن يبطل كل جلسات الأدمن القديمة (تحتاج تسجل دخول من جديد)
+      data: { passwordHash, sessionVersion: { increment: 1 } },
     });
   }
 
