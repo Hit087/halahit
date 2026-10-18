@@ -10,6 +10,7 @@ import {
   changeEmail,
   changePassword,
   deleteAccount,
+  signOutEverywhere,
 } from "@/server/actions/account";
 
 type ActionResult = { success: boolean; error?: string };
@@ -73,7 +74,15 @@ export function ProfileForms({
     onSuccess: () => signOut({ callbackUrl: "/account/login" }),
   });
 
-  const passwordForm = useFormAction(changePassword, { resetOnSuccess: true });
+  const passwordForm = useFormAction(changePassword, {
+    resetOnSuccess: true,
+    // تغيير كلمة المرور يبطل كل الجلسات القديمة، فنطلّعه ليسجّل دخول بكلمته الجديدة
+    onSuccess: () => signOut({ callbackUrl: "/account/login" }),
+  });
+
+  const allDevices = useFormAction(async () => signOutEverywhere(), {
+    onSuccess: () => signOut({ callbackUrl: "/account/login" }),
+  });
 
   const deleteForm = useFormAction(deleteAccount, {
     onSuccess: () => signOut({ callbackUrl: "/" }),
@@ -141,7 +150,10 @@ export function ProfileForms({
 
           {/* ==== كلمة المرور ==== */}
           <Card>
-            <h2 className="mb-4 text-lg font-semibold">تغيير كلمة المرور</h2>
+            <h2 className="mb-1 text-lg font-semibold">تغيير كلمة المرور</h2>
+            <p className="mb-4 text-sm text-text/60">
+              بعد التغيير يتم تسجيل خروجك من كل الأجهزة، وتدخل من جديد بكلمة المرور الجديدة.
+            </p>
             <form onSubmit={passwordForm.submit} className="space-y-4">
               <Input
                 name="currentPassword"
@@ -171,6 +183,21 @@ export function ProfileForms({
               />
               <Button type="submit" variant="accent" loading={passwordForm.loading}>
                 تغيير كلمة المرور
+              </Button>
+            </form>
+          </Card>
+
+          {/* ==== الخروج من كل الأجهزة ==== */}
+          <Card>
+            <h2 className="mb-1 text-lg font-semibold">الأجهزة المسجّل دخولك منها</h2>
+            <p className="mb-4 text-sm text-text/60">
+              إذا حسيت إن أحد دخل حسابك، أو نسيت حسابك مفتوح بجهاز ثاني، سجّل الخروج من كل
+              الأجهزة (بما فيها هذا الجهاز).
+            </p>
+            <form onSubmit={allDevices.submit} className="space-y-4">
+              <Status error={allDevices.error} done={allDevices.done} doneText="تم تسجيل الخروج من كل الأجهزة" />
+              <Button type="submit" variant="accent" loading={allDevices.loading}>
+                تسجيل الخروج من كل الأجهزة
               </Button>
             </form>
           </Card>
