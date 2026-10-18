@@ -131,8 +131,13 @@ function buildZip(files: { name: string; data: Buffer }[]): Buffer {
   return Buffer.concat([...localParts, centralBuf, end]);
 }
 
-// الصف الأول يعتبر عناوين (خط عريض). الورقة من اليمين لليسار عشان العربي.
-export function buildXlsx(rows: CsvCell[][], columnWidths: number[] = []): Buffer {
+export type SheetInput = {
+  name: string;
+  rows: CsvCell[][];
+  widths?: number[];
+};
+
+function sheetXml(rows: CsvCell[][], columnWidths: number[] = []): string {
   const sheetRows: string[] = [];
 
   rows.forEach((row, r) => {
@@ -160,32 +165,61 @@ export function buildXlsx(rows: CsvCell[][], columnWidths: number[] = []): Buffe
           .join("")}</cols>`
       : "";
 
-  const sheetXml =
+  return (
     `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
     `<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">` +
     `<sheetViews><sheetView rightToLeft="1" workbookViewId="0">` +
     `<pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/>` +
     `</sheetView></sheetViews>` +
     cols +
-    `<sheetData>${sheetRows.join("")}</sheetData></worksheet>`;
+    `<sheetData>${sheetRows.join("")}</sheetData></worksheet>`
+  );
+}
+
+// ملف Excel بعدة أوراق. الصف الأول بكل ورقة يعتبر عناوين (خط عريض). الورقة من اليمين لليسار عشان العربي.
+export function buildXlsxMulti(sheets: SheetInput[]): Buffer {
+  const XML_HEAD = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`;
+
+  const sheetOverrides = sheets
+    .map(
+      (_, i) =>
+        `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`
+    )
+    .join("");
+
+  const workbookSheets = sheets
+    .map(
+      (sh, i) =>
+        `<sheet name="${xmlEscape(sh.name.slice(0, 31))}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`
+    )
+    .join("");
+
+  const sheetRels = sheets
+    .map(
+      (_, i) =>
+        `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`
+    )
+    .join("");
+
+  const stylesRelId = sheets.length + 1;
 
   const files = [
     {
       name: "[Content_Types].xml",
       data:
-        `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
+        XML_HEAD +
         `<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">` +
         `<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>` +
         `<Default Extension="xml" ContentType="application/xml"/>` +
         `<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>` +
-        `<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>` +
+        sheetOverrides +
         `<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>` +
         `</Types>`,
     },
     {
       name: "_rels/.rels",
       data:
-        `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
+        XML_HEAD +
         `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">` +
         `<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>` +
         `</Relationships>`,
@@ -193,23 +227,23 @@ export function buildXlsx(rows: CsvCell[][], columnWidths: number[] = []): Buffe
     {
       name: "xl/workbook.xml",
       data:
-        `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
+        XML_HEAD +
         `<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">` +
-        `<sheets><sheet name="Products" sheetId="1" r:id="rId1"/></sheets></workbook>`,
+        `<sheets>${workbookSheets}</sheets></workbook>`,
     },
     {
       name: "xl/_rels/workbook.xml.rels",
       data:
-        `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
+        XML_HEAD +
         `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">` +
-        `<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>` +
-        `<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>` +
+        sheetRels +
+        `<Relationship Id="rId${stylesRelId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>` +
         `</Relationships>`,
     },
     {
       name: "xl/styles.xml",
       data:
-        `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
+        XML_HEAD +
         `<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">` +
         `<fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts>` +
         `<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>` +
@@ -217,12 +251,21 @@ export function buildXlsx(rows: CsvCell[][], columnWidths: number[] = []): Buffe
         `<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>` +
         `<cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>` +
         `<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs>` +
+        `<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>` +
         `</styleSheet>`,
     },
-    { name: "xl/worksheets/sheet1.xml", data: sheetXml },
+    ...sheets.map((sh, i) => ({
+      name: `xl/worksheets/sheet${i + 1}.xml`,
+      data: sheetXml(sh.rows, sh.widths ?? []),
+    })),
   ].map((f) => ({ name: f.name, data: Buffer.from(f.data, "utf8") }));
 
   return buildZip(files);
+}
+
+// ورقة وحدة (يستخدمها تصدير المنتجات)
+export function buildXlsx(rows: CsvCell[][], columnWidths: number[] = []): Buffer {
+  return buildXlsxMulti([{ name: "Products", rows, widths: columnWidths }]);
 }
 
 // ==================== قراءة xlsx ====================
