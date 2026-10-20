@@ -1,5 +1,6 @@
 "use server";
 
+import { randomBytes } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { calculateDiscount } from "@/lib/coupon";
 import { buildWhatsAppMessage, getWhatsAppUrl } from "@/lib/whatsapp";
@@ -206,6 +207,8 @@ export async function processCheckout(data: unknown) {
     prisma.order.create({
       data: {
         orderNumber,
+        // رمز تتبع عشوائي قوي (192 بت) بدل الافتراضي، عشان ما أحد يقدر يخمّن روابط تتبع طلبات الناس
+        trackingToken: randomBytes(24).toString("base64url"),
         customerName,
         customerPhone,
         customerEmail: finalEmail,
