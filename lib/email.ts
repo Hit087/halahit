@@ -1,7 +1,10 @@
 import { formatPrice } from "./utils";
 
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
+
 const BREVO_ENDPOINT = "https://api.brevo.com/v3/smtp/email";
+
+const SITE_URL = "https://halahit.onrender.com";
 
 const SENDER = {
   email: "hithytl15@gmail.com",
@@ -14,6 +17,17 @@ const statusLabels: Record<string, string> = {
   DELIVERED: "تم التوصيل",
   CANCELLED: "ملغي",
 };
+
+// أي نص يجي من المستخدم (مثل الاسم) لازم ينتظّف قبل ما ندخله بالإيميل،
+// وإلا أحد يقدر يسجّل باسم فيه روابط وهمية ونرسله بإيميل المتجر لأي شخص (تصيّد)
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 function wrapEmail(title: string, bodyHtml: string) {
   return `
@@ -66,7 +80,7 @@ export async function sendWelcomeEmail(to: string, name: string) {
     to,
     "أهلاً بك في هيت 🎉",
     wrapEmail(
-      `أهلاً ${name}!`,
+      `أهلاً ${escapeHtml(name)}!`,
       `<p style="color:#3E2723; line-height:1.8;">تم إنشاء حسابك بنجاح في متجر هيت. تقدر الحين تتابع طلباتك وتحفظ منتجاتك المفضلة من صفحة حسابك.</p>`
     )
   );
@@ -82,7 +96,7 @@ export async function sendOrderConfirmationEmail(
     wrapEmail(
       "تم استلام طلبك",
       `<p style="color:#3E2723; line-height:1.8;">شكراً لطلبك من هيت! رقم طلبك <strong>${params.orderNumber}</strong> والإجمالي <strong>${formatPrice(params.total)}</strong>.</p>
-      <p style="margin-top:16px;"><a href="https://halahit.onrender.com/orders/${params.trackingToken}" style="color:#7A3B41;">تابع حالة طلبك من هنا</a></p>`
+       <p style="margin-top:16px;"><a href="${SITE_URL}/account/orders/${encodeURIComponent(params.trackingToken)}" style="color:#7A3B41;">تابع حالة طلبك من هنا</a></p>`
     )
   );
 }
@@ -97,7 +111,7 @@ export async function sendOrderStatusEmail(
     wrapEmail(
       "تحديث على طلبك",
       `<p style="color:#3E2723; line-height:1.8;">حالة طلبك <strong>${params.orderNumber}</strong> الحين: <strong>${statusLabels[params.status] ?? params.status}</strong></p>
-      <p style="margin-top:16px;"><a href="https://halahit.onrender.com/orders/${params.trackingToken}" style="color:#7A3B41;">عرض تفاصيل الطلب</a></p>`
+       <p style="margin-top:16px;"><a href="${SITE_URL}/account/orders/${encodeURIComponent(params.trackingToken)}" style="color:#7A3B41;">عرض تفاصيل الطلب</a></p>`
     )
   );
 }
@@ -117,11 +131,15 @@ export async function sendCampaignEmail(to: string, subject: string, message: st
   return sendEmail(
     to,
     subject,
-    wrapEmail(subject, `<div style="color:#3E2723; line-height:1.8; white-space:pre-line;">${message}</div>`)
+    wrapEmail(
+      escapeHtml(subject),
+      `<div style="color:#3E2723; line-height:1.8; white-space:pre-line;">${escapeHtml(message)}</div>`
+    )
   );
 }
 
-// ==================== إضافة جديدة: استرجاع كلمة المرور ====================
+// ==================== استرجاع كلمة المرور ====================
+
 export async function sendPasswordResetEmail(to: string, resetLink: string) {
   return sendEmail(
     to,
@@ -129,8 +147,8 @@ export async function sendPasswordResetEmail(to: string, resetLink: string) {
     wrapEmail(
       "طلب إعادة تعيين كلمة المرور",
       `<p style="color:#3E2723; line-height:1.8;">وصلنا طلب لإعادة تعيين كلمة مرور حسابك. اضغط الرابط أدناه لاختيار كلمة مرور جديدة (صالح لمدة ساعة واحدة):</p>
-      <p style="margin-top:16px;"><a href="${resetLink}" style="color:#7A3B41; font-weight:bold;">إعادة تعيين كلمة المرور</a></p>
-      <p style="margin-top:16px; color:#9a8f89; font-size:13px;">إذا لم تطلب هذا، تجاهل هذه الرسالة.</p>`
+       <p style="margin-top:16px;"><a href="${resetLink}" style="color:#7A3B41; font-weight:bold;">إعادة تعيين كلمة المرور</a></p>
+       <p style="margin-top:16px; color:#9a8f89; font-size:13px;">إذا لم تطلب هذا، تجاهل هذه الرسالة.</p>`
     )
   );
 }
